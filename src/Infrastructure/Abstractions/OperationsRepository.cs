@@ -35,7 +35,7 @@ internal abstract class OperationsRepository<TEntity, TId>(CoreDbContext dbConte
 		_entities.Remove(entity);
 	}
 
-	public virtual async Task<TEntity> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+	public virtual async Task<TEntity?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
 	{
 		return await _entities.AsNoTracking().Where(x => x.Id.Equals(id)).FirstOrDefaultAsync(cancellationToken);
 	}

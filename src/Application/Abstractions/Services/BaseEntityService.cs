@@ -10,10 +10,6 @@ public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository e
 	where TId : IComparable<TId>
 	where TRepository : IEntityOperations<TEntity, TId>
 {
-	protected abstract Func<TId, Error> EntityWithIdNotFound { get; }
-	protected abstract Error CreateNullFailure { get;  }
-	protected abstract Error UpdateNullFailure { get; }
-
 	protected TRepository _entityRepository = entityRepository;
 	protected IUnitOfWork _unitOfWork = unitOfWork;
 
@@ -24,7 +20,7 @@ public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository e
 		if (await ExistsByIdAsync(entityId, cancellationToken) == true)
 			return Result.Ok();
 
-		return Result.Bad(EntityWithIdNotFound(entityId!));
+		return Result.Bad(EntityErrors<TEntity, TId>.NotFound(entityId!));
 	}
 
 	public virtual async Task<Result<TEntity>> GetByIdAsync(TId entityId, CancellationToken cancellationToken = default)
@@ -32,7 +28,7 @@ public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository e
 		var entity = await _entityRepository.GetByIdAsync(entityId, cancellationToken);
 
 		if (entity == null)
-			return Result<TEntity>.Bad(EntityWithIdNotFound(entityId));
+			return Result<TEntity>.Bad(EntityErrors<TEntity, TId>.NotFound(entityId));
 
 		return Result<TEntity>.Ok(entity);
 	}
@@ -42,7 +38,7 @@ public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository e
 	public virtual async Task<Result<TEntity>> CreateAsync(TEntity newEntity)
 	{
 		if (newEntity == null)
-			return Result<TEntity>.Bad(CreateNullFailure);
+			return Result<TEntity>.Bad(EntityErrors<TEntity, TId>.CreateNullFailure);
 
 		var validationResult = await ValidateEntityAsync(newEntity);
 
@@ -57,7 +53,7 @@ public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository e
 	public virtual async Task<Result<TEntity>> UpdateAsync(TEntity changedEntity)
 	{
 		if(changedEntity == null)
-			return Result<TEntity>.Bad(UpdateNullFailure);
+			return Result<TEntity>.Bad(EntityErrors<TEntity, TId>.UpdateNullFailure);
 
 		var entityExistsResult = await VerifyExistsByIdAsync(changedEntity.Id);
 
