@@ -21,7 +21,8 @@ public static class Dependency
 			options => options.EnableRetryOnFailure(
 						maxRetryCount: 3,
 						maxRetryDelay: TimeSpan.FromSeconds(5),
-						errorNumbersToAdd: null)));
+						errorNumbersToAdd: null))
+			.UseSnakeCaseNamingConvention());
 		#endregion
 
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
