@@ -1,5 +1,4 @@
-﻿using Application.Results;
-namespace Application.Results;
+﻿namespace Application.Results;
 
 /// <summary>
 /// Provides extension methods for the <see cref="Result"/> and <see cref="Result{TValue}"/> classes

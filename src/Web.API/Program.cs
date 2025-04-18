@@ -1,8 +1,15 @@
+#region Using Directives
 using Asp.Versioning.Builder;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Infrastructure;
 using Application;
+using System.Text.Json.Serialization;
+using Web.API;
+using Web.API.Core.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+#endregion
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,10 +29,36 @@ builder.Services.AddApiVersioning(opt =>
 });
 #endregion
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen().ConfigureOptions<ConfigureSwaggerOptions>();
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
+
+builder.Services.AddControllers()
+			.AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+#region JWT
+builder.Services.AddScoped<JwtAuthentication>();
+
+var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtOptions>() ?? 
+	throw new ArgumentNullException(nameof(JwtOptions), "JWT options are not configured.");
+
+builder.Services.AddAuthentication().AddJwtBearer(opt =>
+		{
+			opt.SaveToken = false;
+			opt.RequireHttpsMetadata = true;
+			opt.TokenValidationParameters = new TokenValidationParameters
+			{
+				ValidateIssuer = true,
+				ValidateAudience = true,
+				ValidateLifetime = true,
+				ValidateIssuerSigningKey = true,
+				ValidIssuer = jwtSettings.Issuer,
+				ValidAudience = jwtSettings.Audience,
+				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+			};
+		});
+#endregion
 
 var app = builder.Build();
 
@@ -40,22 +73,25 @@ RouteGroupBuilder group = app
 	.WithApiVersionSet(apiVersionSet);
 #endregion
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
 	app.UseSwagger();
 	app.UseSwaggerUI(options =>
 	{
 		IReadOnlyList<ApiVersionDescription> descriptions = app.DescribeApiVersions();
 
-		foreach (ApiVersionDescription description in descriptions)
+		foreach (var description in descriptions)
 		{
+			options.EnablePersistAuthorization();
+			options.OAuthUsePkce();
+
 			string url = $"/swagger/{description.GroupName}/swagger.json";
 			string name = description.GroupName.ToUpperInvariant();
 
 			options.SwaggerEndpoint(url, name);
 		}
 	});
-}
+//}
 
 app.UseHttpsRedirection();
 app.MapControllers();

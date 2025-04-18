@@ -4,9 +4,9 @@ using Domain.Abstractions;
 
 namespace Application.Abstractions.Services;
 
-public abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository entityRepository, IUnitOfWork unitOfWork)
+internal abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository entityRepository, IUnitOfWork unitOfWork)
 	: IEntityService<TEntity, TId>
-	where TEntity : BaseEntity<TId>
+	where TEntity : IBaseEntity<TId>
 	where TId : IComparable<TId>
 	where TRepository : IEntityOperations<TEntity, TId>
 {

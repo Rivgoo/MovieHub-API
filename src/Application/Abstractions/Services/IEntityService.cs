@@ -17,7 +17,7 @@ namespace Application.Abstractions.Services;
 /// to indicate success or failure, including associated errors.
 /// </remarks>
 public interface IEntityService<TEntity, TId>
-	where TEntity : BaseEntity<TId>
+	where TEntity : IBaseEntity<TId>
 	where TId : IComparable<TId>
 {
 	/// <summary>

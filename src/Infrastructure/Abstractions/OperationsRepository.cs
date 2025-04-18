@@ -9,7 +9,7 @@ internal abstract class OperationsRepository<TEntity, TId>(CoreDbContext dbConte
 	Repository<TEntity, TId>(dbContext),
 	IEntityOperations<TEntity, TId>
 	where TId : notnull, IComparable<TId>
-	where TEntity : BaseEntity<TId>
+	where TEntity : class, IBaseEntity<TId>
 {
 	public virtual void Add(TEntity entity)
 	{

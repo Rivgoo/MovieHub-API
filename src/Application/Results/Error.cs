@@ -1,4 +1,6 @@
-﻿namespace Application.Results;
+﻿using System.Net;
+
+namespace Application.Results;
 
 /// <summary>
 /// Represents a specific error that occurred during an operation.
@@ -92,7 +94,7 @@ public class Error
 	/// <param name="code">The unique error code.</param>
 	/// <param name="description">A human-readable description indicating that authentication is required.</param>
 	/// <returns>A new instance of <see cref="Error"/> with <see cref="ErrorType"/> set to <see cref="ErrorType.AccessUnAuthorized"/>.</returns>
-	public static Error AccessUnAuthorized(string code, string description) =>
+	public static Error Unauthorized(string code, string description) =>
 		new(code, description, ErrorType.AccessUnAuthorized);
 
 	/// <summary>
@@ -109,4 +111,28 @@ public class Error
 	 /// </summary>
 	 public static Error InternalServerError(string code, string description) =>
 		 new(code, description, ErrorType.InternalServerError);
+
+	/// <summary>
+	/// Maps an <see cref="ErrorType"/> to a corresponding <see cref="HttpStatusCode"/>.
+	/// </summary>
+	/// <param name="ErrorType">The <see cref="ErrorType"/> value to map. This parameter is extended.</param>
+	/// <returns>The corresponding <see cref="HttpStatusCode"/>.</returns>
+	/// <remarks>
+	/// This mapping provides a standard way to translate internal error categories
+	/// to external HTTP response statuses for API clients.
+	/// </remarks>
+	public HttpStatusCode ToHttpStatusCode()
+	{
+		return ErrorType switch
+		{
+			ErrorType.NotFound => HttpStatusCode.NotFound,
+			ErrorType.Validation => HttpStatusCode.BadRequest,
+			ErrorType.Conflict => HttpStatusCode.Conflict,
+			ErrorType.AccessUnAuthorized => HttpStatusCode.Unauthorized,
+			ErrorType.AccessForbidden => HttpStatusCode.Forbidden,
+			ErrorType.Failure => HttpStatusCode.InternalServerError,
+			ErrorType.InternalServerError => HttpStatusCode.InternalServerError,
+			_ => HttpStatusCode.InternalServerError
+		};
+	}
 }
