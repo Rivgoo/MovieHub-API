@@ -9,6 +9,19 @@ namespace Infrastructure.Core;
 internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : IdentityDbContext
 	<User, Role, string, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>(options)
 {
+	#region Tables
+	public DbSet<Actor> Actrors { get; set; }
+	public DbSet<Booking> Bookings { get; set; }
+	public DbSet<CinemaHall> CinemaHalls { get; set; }
+	public DbSet<Content> Contents { get; set; }
+	public DbSet<ContentActor> ContentActors { get; set; }
+	public DbSet<ContentGenre> ContentGenres { get; set; }
+	public DbSet<FavoriteContent> FavoriteContents { get; set; }
+	public DbSet<Genre> Genres { get; set; }
+	public DbSet<Session> Sessions { get; set; }
+	#endregion
+
+	#region Set up audit information
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
 		ApplyAuditInfo();
@@ -19,7 +32,7 @@ internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : I
 		ApplyAuditInfo();
 		return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 	}
-	
+
 	public override int SaveChanges()
 	{
 		ApplyAuditInfo();
@@ -30,10 +43,39 @@ internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : I
 		ApplyAuditInfo();
 		return base.SaveChanges(acceptAllChangesOnSuccess);
 	}
+	#endregion
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+
+		#region Many-to-Many Relationships
+		modelBuilder.Entity<Content>()
+			.HasMany(e => e.Genres)
+			.WithMany(e => e.Contents)
+			.UsingEntity<ContentGenre>();
+
+		modelBuilder.Entity<Content>()
+			.HasMany(e => e.Actors)
+			.WithMany(e => e.Contents)
+			.UsingEntity<ContentActor>();
+		#endregion
+
+		#region Enum Conversion
+		modelBuilder.Entity<Booking>(entity =>
+		{
+			entity.Property(b => b.Status)
+				  .HasConversion<string>()
+				  .HasMaxLength(50);
+		});
+
+		modelBuilder.Entity<Session>(entity =>
+		{
+			entity.Property(b => b.Status)
+				  .HasConversion<string>()
+				  .HasMaxLength(50);
+		});
+		#endregion
 
 		#region Set Table Names
 		modelBuilder.Entity<User>(b => b.ToTable("users"));
@@ -51,6 +93,7 @@ internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : I
 			new Role(RoleList.Customer));
 		#endregion
 	}
+
 	private void ApplyAuditInfo()
 	{
 		var entries = ChangeTracker
