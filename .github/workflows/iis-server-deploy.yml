@@ -19,7 +19,7 @@ jobs:
         run: | 
           dotnet tool install --global dotnet-ef
           dotnet tool restore
-          dotnet ef database update -p Web.API --connection '${{ secrets.DBConnection }}'
+          dotnet ef database update -p Web.API.csproj --connection '${{ secrets.DBConnection }}'
       
       # maxcpucount:1 потрібен, щоб уникнути багу з білду проекту на багатоядерному процесорі.
       - name: Build
