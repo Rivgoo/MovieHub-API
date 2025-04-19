@@ -1,0 +1,42 @@
+name: Auto deployment on IIS
+
+on:
+  workflow_dispatch:
+jobs:
+
+  build_and_deploy:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+
+      - name: Restore tool
+        run: dotnet tool restore
+      
+      # maxcpucount:1 потрібен, щоб уникнути багу з білду проекту на багатоядерному процесорі.
+      - name: Build
+        run: dotnet build MoviePoster-API.sln -c Release --no-self-contained /maxcpucount:1
+        
+      - name: Publish
+        run: dotnet publish MoviePoster-API.sln -c Release --no-self-contained -o "./publish" /maxcpucount:1
+        
+      # deploy powershell script
+      # source-path (де була опублікована наша програма)
+      # iis-deploy-service-url : "https://site.com.ua:8172"
+      # iis-deploy-website-name : "site.com.ua"
+      # iis-deploy-username : "DeployNameIvan"
+      # iis-deploy-password : "Passwword333"  
+      - name: Deploy Application on IIS
+        shell: pwsh
+        run: >
+          ./.github/workflows/scripts/PublishAspNet5Website.ps1
+          ./publish
+          ${{ secrets.WebDeployServiceUrl }}
+          ${{ secrets.WebDeployWebsiteName }}
+          ${{ secrets.WebDeployUsername }}
+          ${{ secrets.WebDeployPassword }}
