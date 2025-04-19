@@ -75,9 +75,9 @@ public class Error
 	/// </summary>
 	/// <param name="code">The unique error code.</param>
 	/// <param name="description">A human-readable description explaining the validation failure.</param>
-	/// <returns>A new instance of <see cref="Error"/> with <see cref="ErrorType"/> set to <see cref="ErrorType.Validation"/>.</returns>
-	public static Error Validation(string code, string description) =>
-		new(code, description, ErrorType.Validation);
+	/// <returns>A new instance of <see cref="Error"/> with <see cref="ErrorType"/> set to <see cref="ErrorType.BadRequest"/>.</returns>
+	public static Error BadRequest(string code, string description) =>
+		new(code, description, ErrorType.BadRequest);
 
 	/// <summary>
 	/// Creates a new instance of <see cref="Error"/> representing a conflict error.
@@ -126,7 +126,7 @@ public class Error
 		return ErrorType switch
 		{
 			ErrorType.NotFound => HttpStatusCode.NotFound,
-			ErrorType.Validation => HttpStatusCode.BadRequest,
+			ErrorType.BadRequest => HttpStatusCode.BadRequest,
 			ErrorType.Conflict => HttpStatusCode.Conflict,
 			ErrorType.AccessUnAuthorized => HttpStatusCode.Unauthorized,
 			ErrorType.AccessForbidden => HttpStatusCode.Forbidden,

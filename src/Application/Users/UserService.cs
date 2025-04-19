@@ -6,7 +6,6 @@ using Application.Users.Models;
 using Application.Utilities;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace Application.Users;
 
@@ -14,14 +13,32 @@ internal class UserService(
 	UserManager<User> userManager,
 	SignInManager<User> signInManager,
 	IUserRepository entityRepository,
-	IOptions<IdentityOptions> identityOptionsAccessor,
 	IUnitOfWork unitOfWork) : 
 	BaseEntityService<User, string, IUserRepository>(entityRepository, unitOfWork), IUserService
 {
 	private readonly UserManager<User> _userManager = userManager;
 	private readonly SignInManager<User> _signInManager = signInManager;
-	private readonly PasswordOptions _passwordOptions = identityOptionsAccessor.Value.Password;
 
+	public override async Task<Result<User>> CreateAsync(User newEntity)
+	{
+		var alreadyExistsResult = await ExistsByEmailAsync(newEntity.Email);
+
+		if(alreadyExistsResult.IsFailure)
+			return alreadyExistsResult.ToValue<User>();
+
+		if(alreadyExistsResult.Value)
+			return Result<User>.Bad(UserErrors.UserWithAlreadyExists(newEntity.Email));
+
+		return await base.CreateAsync(newEntity);
+	}
+
+	public async Task<Result<bool>> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+	{
+		if (Guard.MaxLength(email, 255) || StringUtilities.ValidateEmail(email) == false)
+			return Result<bool>.Bad(UserErrors.InvalidEmail);
+
+		return Result<bool>.Ok(await entityRepository.ExistsByEmailAsync(email, cancellationToken));
+	}
 	public async Task<Result<User>> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
 		var user = await entityRepository.GetByEmailAsync(email, cancellationToken);
@@ -38,7 +55,7 @@ internal class UserService(
 
 		if(StringUtilities.ValidateEmail(email) == false)
 		{
-			result.IsInvalidInput = true;
+			result.IsInvalidCredentials = true;
 			return result;
 		}
 
@@ -46,7 +63,7 @@ internal class UserService(
 
 		if(user == null)
 		{
-			result.IsInvalidInput = true;
+			result.IsInvalidCredentials = true;
 			return result;
 		}
 
@@ -79,7 +96,7 @@ internal class UserService(
 			return result;
 		}
 
-		result.IsInvalidInput = true;
+		result.IsInvalidCredentials = true;
 
 		return result;
 	}
@@ -87,6 +104,9 @@ internal class UserService(
 	protected override async Task<Result> ValidateEntityAsync(User entity)
 	{
 		StringUtilities.TrimStringProperties(entity);
+
+		if (Guard.MaxLength(entity.Email, 255) || StringUtilities.ValidateEmail(entity.Email) == false)
+			return Result<User>.Bad(UserErrors.InvalidEmail);
 
 		if (Guard.MinLength(entity.FirstName, 1))
 			return Result.Bad(EntityErrors<User, string>.StringTooShort(nameof(entity.FirstName), 1));

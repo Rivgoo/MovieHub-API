@@ -1,6 +1,5 @@
 ﻿using Application.Results;
 using Application.Users.Abstractions;
-using Application.Users.Models;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,34 +44,58 @@ public class AuthenticationController(
 	/// using the provided email and password via the user service. Upon successful
 	/// authentication, it generates a JWT access token.
 	///
-	/// Authentication failures (e.g., invalid credentials, locked out) are communicated
-	/// via HTTP <see cref="StatusCodes.Status400BadRequest"/> with an <see cref="AuthenticationResult"/>
-	/// object in the response body where <see cref="AuthenticationResult.Succeeded"/> is <see langword="false"/>
-	/// and specific failure flags are set.
+	/// Authentication failures (e.g., invalid credentials, locked out account) are communicated
+	/// via an appropriate HTTP status code (e.g., <see cref="StatusCodes.Status401Unauthorized"/> or <see cref="StatusCodes.Status403Forbidden"/>)
+	/// with an <see cref="Error"/> object in the response body detailing the failure.
 	///
-	/// This endpoint does NOT require authentication itself.
+	/// This endpoint does NOT require previous authentication.
 	/// </remarks>
 	/// <param name="request">The authentication request containing user credentials (email and password).</param>
-	/// <response code="200">Returns the AuthenticationResult with user information and tokens upon successful authentication.</response>
-	/// <response code="400">Returns the AuthenticationResult with AuthenticationResult.Succeeded set to false and details about the authentication failure (e.g., invalid credentials, locked out).</response>
-	/// <response code="401">Returns an Error object if API authentication is disabled via configuration or if the request is otherwise unauthorized.</response>
+	/// <returns>
+	/// <see cref="IActionResult"/> which can be:
+	/// <list type="bullet">
+	/// <item><term><see cref="OkObjectResult"/></term><description>with <see cref="AuthenticationResponse"/> upon success (HTTP 200).</description></item>
+	/// <item><term><see cref="ObjectResult"/></term><description>with <see cref="Error"/> for various failure scenarios (HTTP 401 or 403).</description></item>
+	/// </list>
+	/// </returns>
+	/// <response code="200">Returns user information and tokens upon successful authentication.</response>
+	/// <response code="401">Returns object detailing invalid credentials.</response>
+	/// <response code="403">Returns object detailing various access errors: API disabled, account locked out, or email not confirmed.</response>
 	[HttpPost()]
 	[AllowAnonymous]
-	[ProducesResponseType(typeof(AuthenticationResult), StatusCodes.Status200OK)]
-	[ProducesResponseType(typeof(AuthenticationResult), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
 	public async Task<IActionResult> Token([FromBody] AuthenticationRequest request)
 	{
 		if (!_configuration.GetValue<bool>(_enableAPIAuthKey))
-			return Result.Bad(Error.Unauthorized("API.Disabled", "API authentication is disabled.")).ToActionResult();
+			return Result.Bad(AuthenticationErrors.APIDisabled).ToActionResult();
 
-		var result = await _userService.TryAuthentication(request.Email, request.Password);
+		var authenticationResult = await _userService.TryAuthentication(request.Email, request.Password);
 
-		if (!result.Succeeded)
-			return BadRequest(result);
+		if (authenticationResult.Succeeded == false)
+		{
+			if (authenticationResult.IsInvalidCredentials)
+				return Result.Bad(AuthenticationErrors.InvalidCredentials).ToActionResult();
 
-		result.AccessToken = _jwtAuthentication.GenerateToken(result.User!.Id, result.User.Role);
+			if (authenticationResult.IsLockedOut)
+				return Result.Bad(AuthenticationErrors.UserLockedOut).ToActionResult();
 
-		return Ok(result);
+			if (authenticationResult.IsEmailNotConfirmed)
+				return Result.Bad(AuthenticationErrors.UserEmailNotConfirmed).ToActionResult();
+
+			if (authenticationResult.IsBlocked)
+				return Result.Bad(AuthenticationErrors.UserBlocked).ToActionResult();
+		}
+
+		var response = new AuthenticationResponse()
+		{
+			UserId = authenticationResult.User!.Id,
+			UserRole = authenticationResult.User.Role,
+			AccessToken = _jwtAuthentication.GenerateToken(authenticationResult.User!.Id, authenticationResult.User.Role)
+		};
+
+		return Ok(response);
 	}
 }

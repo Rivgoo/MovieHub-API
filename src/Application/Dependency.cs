@@ -13,6 +13,7 @@ public static class Dependency
 		#region Services
 		services.AddScoped<IGenreService, GenreService>();
 		services.AddScoped<IUserService, UserService>();
+		services.AddScoped<IUserRegistrator, UserRegistrator>();
 		#endregion
 
 		return services;

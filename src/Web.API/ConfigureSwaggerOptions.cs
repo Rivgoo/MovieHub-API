@@ -34,7 +34,6 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
 	///   <item>Adds a Swagger document (<c>SwaggerDoc</c>) for each discovered API version group.</item>
 	///   <item>Includes XML documentation comments from the current executing assembly (Web.API), Application, Infrastructure, and Domain assemblies.</item>
 	///   <item>Applies filters to enhance enum display in the Swagger UI, including names, values, and descriptions.</item>
-	///   <item>Conditionally adds JWT Bearer token security definition and requirement if the <c>USEJWT</c> compilation symbol is defined.</item>
 	/// </list>
 	/// </remarks>
 	/// <param name="options">The <see cref="SwaggerGenOptions"/> to configure.</param>
@@ -44,6 +43,8 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
 			options.SwaggerDoc(
 				description.GroupName,
 				CreateVersionInfo(description));
+
+		options.CustomSchemaIds(type => type.Name);
 
 		var currentProjectXmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 		var applicationXmlFile = $"{Application.AssemblyReference.Assembly.GetName().Name}.xml";
@@ -69,8 +70,7 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
 			o.NewLine = "\n";
 		});
 
-#if USEJWT
-        // Add JWT Bearer security definition for Swagger UI
+
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             In = ParameterLocation.Header,
@@ -81,7 +81,6 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
             Scheme = "Bearer"
         });
 
-        // Add security requirement for JWT to all endpoints (unless overridden)
         options.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
             {
@@ -94,10 +93,9 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
                     }
                 },
 
-                new string[] { }
-            }
+				Array.Empty<string>()
+			}
         });
-#endif
 	}
 
 	/// <summary>

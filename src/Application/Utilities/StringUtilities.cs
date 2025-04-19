@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Application.Utilities; // Ваш простір імен
+namespace Application.Utilities;
 
 /// <summary>
 /// Provides utility methods for common data manipulation tasks.
@@ -14,10 +14,13 @@ namespace Application.Utilities; // Ваш простір імен
 /// </remarks>
 public static class StringUtilities
 {
-	private static readonly Regex EmailRegex = new(
+	private static readonly Regex _emailRegex = new(
 		@"^[^@\s]+@[^@\s]+\.[^@\s]+$",
 		RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture,
 		TimeSpan.FromSeconds(1));
+
+	private static readonly Regex ValidPhoneNumberCharsRegex =
+			new Regex(@"^[0-9\+\-\(\)\s]+$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 
 	/// <summary>
 	/// Trims the string properties of the specified object.
@@ -48,6 +51,38 @@ public static class StringUtilities
 	}
 
 	/// <summary>
+	/// Checks if a given string is a valid phone number based on a basic format and digit count.
+	/// </summary>
+	/// <param name="phoneNumber">The phone number string to validate.</param>
+	/// <param name="minimumDigitLength">The minimum number of digits required after removing non-digit characters. Defaults to 7 (a common minimum for many international numbers).</param>
+	/// <param name="maximumDigitLength">The maximum number of digits allowed after removing non-digit characters. Defaults to 15 (a common maximum for many international numbers).</param>
+	/// <returns><see langword="true"/> if the phone number is considered valid; otherwise, <see langword="false"/>.</returns>
+	/// <remarks>
+	/// This method performs a basic validation:
+	/// 1. Checks if the string is null or empty.
+	/// 2. Checks if the string contains only allowed characters (digits, space, hyphen, parentheses, plus).
+	/// 3. Removes all non-digit characters and checks if the resulting string of digits meets the minimum required length.
+	///
+	/// This validation does NOT verify country-specific formats or the actual existence/validity of the phone number.
+	/// For strict, country-specific validation, consider using a dedicated library like libphonenumber.
+	/// </remarks>
+	public static bool ValidatePhoneNumber(string? phoneNumber, int minimumDigitLength = 7, int maximumDigitLength = 15)
+	{
+		if (string.IsNullOrEmpty(phoneNumber))
+			return false;
+
+		if (!ValidPhoneNumberCharsRegex.IsMatch(phoneNumber))
+			return false;
+
+		string digitsOnly = Regex.Replace(phoneNumber, @"[^0-9]", "");
+
+		if (digitsOnly.Length < minimumDigitLength || digitsOnly.Length > maximumDigitLength)
+			return false; 
+
+		return true;
+	}
+
+	/// <summary>
 	/// Validates the format of an email address string.
 	/// </summary>
 	/// <remarks>
@@ -61,7 +96,7 @@ public static class StringUtilities
 		if (string.IsNullOrWhiteSpace(email))
 			return false;
 
-		return EmailRegex.IsMatch(email);
+		return _emailRegex.IsMatch(email);
 	}
 
 	/// <summary>

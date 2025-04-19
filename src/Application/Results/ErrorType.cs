@@ -25,7 +25,7 @@ public enum ErrorType
 	/// Indicates that the input data or request is invalid according to defined rules or constraints.
 	/// </summary>
 	/// <remarks>Often maps to HTTP 400 Bad Request.</remarks>
-	Validation = 2,
+	BadRequest = 2,
 
 	/// <summary>
 	/// Indicates a conflict with the current state of the resource or system,

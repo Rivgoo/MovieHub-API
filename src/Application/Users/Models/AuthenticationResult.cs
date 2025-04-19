@@ -17,12 +17,6 @@ public class AuthenticationResult
 	public UserAuthenticationInfo? User { get; set; } = default!;
 
 	/// <summary>
-	/// Gets or sets the authentication token (e.g., JWT access token) if the authentication was successful; otherwise, an empty string.
-	/// </summary>
-	/// <value>The generated access token string if successful, or <see cref="string.Empty"/> on failure.</value>
-	public string AccessToken { get; set; } = string.Empty;
-
-	/// <summary>
 	/// Gets or sets a value indicating whether the authentication attempt was successful.
 	/// </summary>
 	/// <value><see langword="true"/> if the authentication process completed successfully; otherwise, <see langword="false"/>.</value>
@@ -44,7 +38,7 @@ public class AuthenticationResult
 	/// Gets or sets a value indicating whether the provided login credentials (username/password) were invalid.
 	/// </summary>
 	/// <value><see langword="true"/> if the input credentials were incorrect; otherwise, <see langword="false"/>.</value>
-	public bool IsInvalidInput { get; set; } = false;
+	public bool IsInvalidCredentials { get; set; } = false;
 
 	/// <summary>
 	/// Gets or sets a value indicating whether the user is blocked by means other than lockout (e.g., manual administrative block).

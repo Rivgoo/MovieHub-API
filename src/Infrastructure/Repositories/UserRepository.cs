@@ -9,6 +9,12 @@ namespace Infrastructure.Repositories;
 internal class UserRepository(CoreDbContext dbContext) :
 	OperationsRepository<User, string>(dbContext), IUserRepository
 {
+	public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+	{
+		return await _entities
+			.AnyAsync(x => x.Email!.Equals(email), cancellationToken);
+	}
+
 	public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
 		return await _entities.AsNoTracking()
