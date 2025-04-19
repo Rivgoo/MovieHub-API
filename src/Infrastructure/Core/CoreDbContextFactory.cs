@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿#if !DEBUG
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
@@ -22,11 +23,17 @@ public class CoreDbContextFactory : IDesignTimeDbContextFactory<CoreDbContext>
 			var connectionArg = Array.Find(args, arg => arg.StartsWith("--connection="));
 
 			if (connectionArg != null)
-				connectionString = connectionArg.Substring("--connection=".Length);
+				connectionString = connectionArg["--connection=".Length..];
 		}
 
 		if (string.IsNullOrEmpty(connectionString))
 			throw new InvalidOperationException("Connection string not provided via environment variables, --connection argument, or configuration.");
+
+		if(connectionString.StartsWith("\""))
+			connectionString = connectionString[1..];
+
+		if (connectionString.EndsWith("\""))
+			connectionString = connectionString[..^1];
 
 		var optionsBuilder = new DbContextOptionsBuilder<CoreDbContext>();
 		optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
@@ -40,3 +47,4 @@ public class CoreDbContextFactory : IDesignTimeDbContextFactory<CoreDbContext>
 		return new CoreDbContext(optionsBuilder.Options);
 	}
 }
+#endif
