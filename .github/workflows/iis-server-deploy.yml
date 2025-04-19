@@ -25,7 +25,7 @@ jobs:
         run: dotnet build MoviePoster-API.sln -c Release --no-self-contained /maxcpucount:1
 
       - name: Apply migrations
-        run: dotnet ef database update -p MoviePoster-API.sln --connection '${{ secrets.DBConnection }}'
+        run: dotnet ef database update -p src/Infrastructure/Infrastructure.csproj --connection '${{ secrets.DBConnection }}'
         
       - name: Publish
         run: dotnet publish MoviePoster-API.sln -c Release --no-self-contained -o "./publish" /maxcpucount:1
