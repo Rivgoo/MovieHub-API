@@ -15,8 +15,11 @@ jobs:
         with:
           dotnet-version: 9.x
 
-      - name: Restore tool
-        run: dotnet tool restore
+      - name: Run EF 
+        run: | 
+          dotnet tool install --global dotnet-ef
+          dotnet tool restore
+          dotnet ef database update -p Web.API --connection '${{ secrets.DBConnection }}'
       
       # maxcpucount:1 потрібен, щоб уникнути багу з білду проекту на багатоядерному процесорі.
       - name: Build
