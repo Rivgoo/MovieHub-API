@@ -14,8 +14,8 @@ internal class ContentActorService(
 	IUnitOfWork unitOfWork) :
 	BaseEntityService<ContentActor, int, IContentActorRepository>(entityRepository, unitOfWork), IContentActorService
 {
-	private readonly IContentService _contentService;
-	private readonly IGenreService _genreService;
+	private readonly IContentService _contentService = contentService;
+	private readonly IGenreService _genreService = genreService;
 
 	protected override async Task<Result> ValidateEntityAsync(ContentActor entity)
 	{
@@ -28,12 +28,12 @@ internal class ContentActorService(
 		var contentExistsResult = await _contentService.VerifyExistsByIdAsync(entity.ContentId);
 
 		if (contentExistsResult.IsFailure)
-			return contentExistsResult.ToValue<ContentActor>();
+			return contentExistsResult;
 
 		var genreExistsResult = await _genreService.VerifyExistsByIdAsync(entity.ActorId);
 
 		if (genreExistsResult.IsFailure)
-			return genreExistsResult.ToValue<ContentActor>();
+			return genreExistsResult;
 
 		return Result.Ok();
 	}
