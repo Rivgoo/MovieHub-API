@@ -8,6 +8,7 @@ using AutoMapper;
 using Application.Users.Abstractions;
 using Application.Users.Models;
 using Application.Results;
+using Domain;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -49,6 +50,7 @@ public class UserController(
 	/// <response code="400">Returns error for validation failures (e.g., invalid password, invalid phone number) or if a user with the provided email already exists</response>
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
 	/// <response code="403">If the authenticated user does not have the '<c>Admin</c>' role.</response>
+	[Authorize(Roles = RoleList.Admin)]
 	[HttpPost("admins/register")]
 	[ProducesResponseType(typeof(CreatedResponse<string>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]

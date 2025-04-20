@@ -44,8 +44,6 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) :
 				description.GroupName,
 				CreateVersionInfo(description));
 
-		options.CustomSchemaIds(type => type.Name);
-
 		var currentProjectXmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 		var applicationXmlFile = $"{Application.AssemblyReference.Assembly.GetName().Name}.xml";
 		var infrastructureXmlFile = $"{Infrastructure.AssemblyReference.Assembly.GetName().Name}.xml";
