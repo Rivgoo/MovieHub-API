@@ -35,33 +35,14 @@ internal abstract class Repository(CoreDbContext dbContext) : IRepository
 /// for the managed entity type. It enforces constraints on the entity and identifier types.
 /// </remarks>
 /// <remarks>
-/// Initializes a new instance of the <see cref="Repository{TEntity, TId}"/> class.
+/// Initializes a new instance of the <see cref="Repository{TEntity}"/> class.
 /// </remarks>
 /// <param name="dbContext">The database context instance.</param>
-internal abstract class Repository<TEntity, TId>(CoreDbContext dbContext) : Repository(dbContext)
-	where TEntity : class, IBaseEntity<TId>
-	where TId : IComparable<TId>
+internal abstract class Repository<TEntity>(CoreDbContext dbContext) : Repository(dbContext)
+	where TEntity : class, IEntity
 {
 	/// <summary>
 	/// The database set for the managed entity type.
 	/// </summary>
 	protected readonly DbSet<TEntity> _entities = dbContext.Set<TEntity>();
-}
-
-/// <summary>
-/// Provides an abstract base class for repositories that manage entities with an integer identifier.
-/// </summary>
-/// <typeparam name="TEntity">The type of the entity managed by this repository.</typeparam>
-/// <remarks>
-/// This class specializes <see cref="Repository{TEntity, TId}"/> for entities using <see langword="int"/> as the identifier type.
-/// It is intended as a shortcut for common cases where an integer primary key is used.
-/// </remarks>
-/// <remarks>
-/// Initializes a new instance of the <see cref="Repository{TEntity}"/> class.
-/// </remarks>
-/// <param name="dbContext">The database context instance.</param>
-internal abstract class Repository<TEntity>(CoreDbContext dbContext) :
-	Repository<TEntity, int>(dbContext) 
-	where TEntity : BaseEntity<int>
-{
 }
