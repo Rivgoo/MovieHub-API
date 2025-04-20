@@ -1,9 +1,7 @@
 ﻿using Application.Abstractions;
-using Application.Genres.Abstractions;
-using Application.Users.Abstractions;
+using Application.Abstractions.Repositories;
 using Domain.Entities;
 using Infrastructure.Core;
-using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -84,8 +82,23 @@ public static class Dependency
 		#endregion
 
 		#region Repositories
-		services.AddScoped<IGenreRepository, GenreRepository>();
-		services.AddScoped<IUserRepository, UserRepository>();
+		var infrastructureAssembly = typeof(CoreDbContext).Assembly;
+
+		var repositoryTypes = infrastructureAssembly.GetTypes()
+			.Where(type => type.IsClass && !type.IsAbstract)
+			.Where(type => typeof(IRepository).IsAssignableFrom(type))
+			.ToList();
+
+		foreach (var repositoryType in repositoryTypes)
+		{
+			var implementedInterfaces = repositoryType.GetInterfaces()
+				.Where(i => i != typeof(IRepository) && i != typeof(IDisposable))
+				.ToList();
+
+			if (implementedInterfaces.Count != 0)
+				foreach (var interfaceType in implementedInterfaces)
+					services.AddScoped(interfaceType, repositoryType);
+		}
 		#endregion
 
 		return services;

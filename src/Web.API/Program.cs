@@ -78,6 +78,9 @@ builder.Services.AddControllers()
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 	app.UseHttpsRedirection();
 
@@ -87,7 +90,6 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 	app.UseSwaggerUI(options =>
 	{
 		options.EnablePersistAuthorization();
-		options.OAuthUsePkce();
 
 		IReadOnlyList<ApiVersionDescription> descriptions = app.DescribeApiVersions();
 
@@ -100,9 +102,6 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 		}
 	});
 }
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllers();
 
