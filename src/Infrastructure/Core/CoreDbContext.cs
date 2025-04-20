@@ -89,8 +89,8 @@ internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : I
 
 		#region Set Identity Roles
 		modelBuilder.Entity<Role>().HasData(
-			new Role(RoleList.Admin),
-			new Role(RoleList.Customer));
+			new Role("e0ddbbf0-c810-432d-8554-640db86c4443", RoleList.Admin),
+			new Role("0de7a5f6-d02a-4041-9c1f-abeb8ed44c92", RoleList.Customer));
 		#endregion
 	}
 

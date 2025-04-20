@@ -6,9 +6,14 @@ public class Role : IdentityRole
 {
 	public Role() : base() { }
 
-	public Role(string role) : base(role) 
+	public Role(string role) : base(role)
 	{
-		Id = Guid.NewGuid().ToString();
+		NormalizedName = role.ToUpper();
+	}
+
+	public Role(string id, string role) : base(role)
+	{
+		Id = id;
 		NormalizedName = role.ToUpper();
 	}
 }

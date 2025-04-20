@@ -86,13 +86,13 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 	app.UseSwagger();
 	app.UseSwaggerUI(options =>
 	{
+		options.EnablePersistAuthorization();
+		options.OAuthUsePkce();
+
 		IReadOnlyList<ApiVersionDescription> descriptions = app.DescribeApiVersions();
 
 		foreach (var description in descriptions)
 		{
-			options.EnablePersistAuthorization();
-			options.OAuthUsePkce();
-
 			string url = $"/swagger/{description.GroupName}/swagger.json";
 			string name = description.GroupName.ToUpperInvariant();
 
