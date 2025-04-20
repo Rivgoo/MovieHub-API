@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Services;
 using Application.Contents.Abstractions;
+using Application.Contents.Abstractions.Services;
 using Application.Results;
 using Application.Users.Abstractions;
 using Domain.Entities;
