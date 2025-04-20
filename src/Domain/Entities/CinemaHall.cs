@@ -34,6 +34,7 @@ public class CinemaHall : BaseEntity<int>, IBaseEntity<int>
 	/// The index of the list represents the row number (0-based, usually treated as 1-based in display).
 	/// </summary>
 	/// <value>A list of integers where list[i] is the number of seats in row i+1.</value>
+	[Required]
 	[Column(TypeName = "json")]
 	public List<int> SeatsPerRow { get; set; } = [];
 
