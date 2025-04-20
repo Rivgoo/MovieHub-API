@@ -21,21 +21,21 @@ public class UserErrors : EntityErrors<User, string>
 	/// </summary>
 	/// <value>An <see cref="Error"/> instance for the invalid email scenario.</value>
 	public static Error InvalidEmail
-		=> Error.BadRequest($"{EntityName}.InvalidEmail", "The provided email address is invalid.");
+		=> Error.BadRequest($"{EntityName}.{nameof(InvalidEmail)}", "The provided email address is invalid.");
 
 	/// <summary>
 	/// Gets an error indicating that the provided password does not meet the required criteria or format.
 	/// </summary>
 	/// <value>An <see cref="Error"/> instance for the invalid password scenario.</value>
 	public static Error InvalidPassword
-		=> Error.BadRequest($"{EntityName}.InvalidPassword", "The provided password is invalid.");
+		=> Error.BadRequest($"{EntityName}.{nameof(InvalidPassword)}", "The provided password is invalid.");
 
 	/// <summary>
 	/// Gets an error indicating that the provided phone number format is invalid.
 	/// </summary>
 	/// <value>An <see cref="Error"/> instance for the invalid phone number scenario.</value>
 	public static Error InvalidPhoneNumber
-		=> Error.BadRequest($"{EntityName}.InvalidPhoneNumber", "The provided phone number is invalid.");
+		=> Error.BadRequest($"{EntityName}.{nameof(InvalidPhoneNumber)}", "The provided phone number is invalid.");
 
 	/// <summary>
 	/// Creates an error indicating that a user with the specified email address already exists.
@@ -47,5 +47,5 @@ public class UserErrors : EntityErrors<User, string>
 	/// address that is already registered in the system.
 	/// </remarks>
 	public static Error UserWithAlreadyExists(string? email)
-		=> Error.Conflict($"{EntityName}.UserWithAlreadyExists", $"User with email '{email}' already exists.");
+		=> Error.Conflict($"{EntityName}.{nameof(UserWithAlreadyExists)}", $"User with email '{email}' already exists.");
 }

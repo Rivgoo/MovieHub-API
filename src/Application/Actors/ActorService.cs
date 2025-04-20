@@ -2,6 +2,7 @@
 using Application.Abstractions.Services;
 using Application.Actors.Abstractions;
 using Application.Results;
+using Application.Utilities;
 using Domain.Entities;
 
 namespace Application.Actors;
@@ -11,6 +12,8 @@ internal class ActorService(IActorRepository entityRepository, IUnitOfWork unitO
 {
 	protected override async Task<Result> ValidateEntityAsync(Actor entity)
 	{
+		StringUtilities.TrimStringProperties(entity);
+
 		if (Guard.MinLength(entity.FirstName, 1))
 			return Result.Bad(EntityErrors<Actor, int>.StringTooShort(nameof(entity.FirstName), 1));
 

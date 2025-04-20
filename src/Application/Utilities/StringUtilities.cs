@@ -19,8 +19,21 @@ public static class StringUtilities
 		RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture,
 		TimeSpan.FromSeconds(1));
 
-	private static readonly Regex ValidPhoneNumberCharsRegex =
+	private static readonly Regex _validPhoneNumberCharsRegex =
 			new Regex(@"^[0-9\+\-\(\)\s]+$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
+	public static bool IsValidWebUrlWithDomainCheck(string? url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+			return false;
+
+		if (Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult) && uriResult != null)
+			if (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps)
+				if (!string.IsNullOrWhiteSpace(uriResult.Host) && !uriResult.IsLoopback && uriResult.HostNameType == UriHostNameType.Dns)
+					return uriResult.Host.Contains('.');
+
+		return false;
+	}
 
 	/// <summary>
 	/// Trims the string properties of the specified object.
@@ -71,7 +84,7 @@ public static class StringUtilities
 		if (string.IsNullOrEmpty(phoneNumber))
 			return false;
 
-		if (!ValidPhoneNumberCharsRegex.IsMatch(phoneNumber))
+		if (!_validPhoneNumberCharsRegex.IsMatch(phoneNumber))
 			return false;
 
 		string digitsOnly = Regex.Replace(phoneNumber, @"[^0-9]", "");
