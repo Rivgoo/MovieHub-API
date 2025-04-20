@@ -13,27 +13,13 @@ public class CoreDbContextFactory : IDesignTimeDbContextFactory<CoreDbContext>
 			.AddEnvironmentVariables()
 			.Build();
 
-		var connectionString = configuration.GetConnectionString("DefaultConnection");
+		var connectionString = string.Empty;
 
 		if (string.IsNullOrEmpty(connectionString))
 			connectionString = configuration["DATABASE_CONNECTION_STRING"];
 
 		if (string.IsNullOrEmpty(connectionString))
-		{
-			var connectionArg = Array.Find(args, arg => arg.StartsWith("--connection="));
-
-			if (connectionArg != null)
-				connectionString = connectionArg["--connection=".Length..];
-		}
-
-		if (string.IsNullOrEmpty(connectionString))
-			throw new InvalidOperationException("Connection string not provided via environment variables, --connection argument, or configuration.");
-
-		if(connectionString.StartsWith("\""))
-			connectionString = connectionString[1..];
-
-		if (connectionString.EndsWith("\""))
-			connectionString = connectionString[..^1];
+			throw new InvalidOperationException("Connection string not provided via environment variables (DATABASE_CONNECTION_STRING).");
 
 		var optionsBuilder = new DbContextOptionsBuilder<CoreDbContext>();
 		optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
