@@ -78,24 +78,28 @@ builder.Services.AddControllers()
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+	app.UseHttpsRedirection();
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
+if (app.Configuration.GetValue<bool>("UseSwagger"))
 {
-	IReadOnlyList<ApiVersionDescription> descriptions = app.DescribeApiVersions();
-
-	foreach (var description in descriptions)
+	app.UseSwagger();
+	app.UseSwaggerUI(options =>
 	{
-		options.EnablePersistAuthorization();
-		options.OAuthUsePkce();
+		IReadOnlyList<ApiVersionDescription> descriptions = app.DescribeApiVersions();
 
-		string url = $"/swagger/{description.GroupName}/swagger.json";
-		string name = description.GroupName.ToUpperInvariant();
+		foreach (var description in descriptions)
+		{
+			options.EnablePersistAuthorization();
+			options.OAuthUsePkce();
 
-		options.SwaggerEndpoint(url, name);
-	}
-});
+			string url = $"/swagger/{description.GroupName}/swagger.json";
+			string name = description.GroupName.ToUpperInvariant();
+
+			options.SwaggerEndpoint(url, name);
+		}
+	});
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -131,13 +135,13 @@ using (var scope = app.Services.CreateScope())
 				else
 					logger.LogError($"Failed to create initial admin user. Error: {registrationResult.Error.Code}");
 			}
-			else if(adminUserExistsResult.IsFailure)
+			else if (adminUserExistsResult.IsFailure)
 			{
 				logger.LogError($"Failed to check if admin user exists. Error: {adminUserExistsResult.Error.Code}");
 			}
 			else
 			{
-				if(app.Environment.IsDevelopment() == false)
+				if (app.Environment.IsDevelopment() == false)
 				{
 					logger.LogError($"Admin user with email {admin.Email} already exists.");
 					logger.LogError("Please remove the initial admin user from the configuration file.");

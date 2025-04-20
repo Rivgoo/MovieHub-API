@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Core;
 
-public sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : IdentityDbContext
+internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : IdentityDbContext
 	<User, Role, string, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>(options)
 {
 	#region Tables

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure;
 
@@ -28,6 +29,35 @@ public static class Dependency
 						maxRetryDelay: TimeSpan.FromSeconds(5),
 						errorNumbersToAdd: null))
 			.UseSnakeCaseNamingConvention());
+
+		var serviceProvider = services.BuildServiceProvider();
+
+		using (var scope = serviceProvider.CreateScope())
+		{
+			var scopedServices = scope.ServiceProvider;
+
+			var dbContext = scopedServices.GetRequiredService<CoreDbContext>();
+			var logger = scopedServices.GetService<ILogger<CoreDbContext>>();
+			var config = scopedServices.GetRequiredService<IConfiguration>();
+
+			var applyMigrations = config.GetValue<bool>("ApplyMigrations");
+
+			if (applyMigrations)
+			{
+				try
+				{
+					dbContext.Database.Migrate();
+
+					logger?.LogInformation("Database migrations applied successfully during service configuration.");
+				}
+				catch (Exception ex)
+				{
+					logger?.LogError(ex, "An error occurred while applying database migrations during service configuration.");
+				}
+			}
+			else
+				logger?.LogInformation("Automatic database migration is disabled by configuration.");
+		}
 		#endregion
 
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
