@@ -148,6 +148,10 @@ namespace Infrastructure.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ActorId")
+                        .HasColumnType("int")
+                        .HasColumnName("actor_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
@@ -188,11 +192,21 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_contents");
 
+                    b.HasIndex("ActorId")
+                        .HasDatabaseName("ix_contents_actor_id");
+
                     b.ToTable("contents", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ContentActor", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("ActorId")
                         .HasColumnType("int")
                         .HasColumnName("actor_id");
@@ -201,14 +215,25 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("content_id");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
                         .HasColumnName("role_name");
 
-                    b.HasKey("ActorId", "ContentId")
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
                         .HasName("pk_content_actors");
+
+                    b.HasIndex("ActorId")
+                        .HasDatabaseName("ix_content_actors_actor_id");
 
                     b.HasIndex("ContentId")
                         .HasDatabaseName("ix_content_actors_content_id");
@@ -218,16 +243,34 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.ContentGenre", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("ContentId")
                         .HasColumnType("int")
                         .HasColumnName("content_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("GenreId")
                         .HasColumnType("int")
                         .HasColumnName("genre_id");
 
-                    b.HasKey("ContentId", "GenreId")
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
                         .HasName("pk_content_genres");
+
+                    b.HasIndex("ContentId")
+                        .HasDatabaseName("ix_content_genres_content_id");
 
                     b.HasIndex("GenreId")
                         .HasDatabaseName("ix_content_genres_genre_id");
@@ -704,6 +747,14 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Content", b =>
+                {
+                    b.HasOne("Domain.Entities.Actor", null)
+                        .WithMany("Contents")
+                        .HasForeignKey("ActorId")
+                        .HasConstraintName("fk_contents_actrors_actor_id");
+                });
+
             modelBuilder.Entity("Domain.Entities.ContentActor", b =>
                 {
                     b.HasOne("Domain.Entities.Actor", "Actor")
@@ -848,6 +899,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Actor", b =>
                 {
                     b.Navigation("ContentActors");
+
+                    b.Navigation("Contents");
                 });
 
             modelBuilder.Entity("Domain.Entities.CinemaHall", b =>

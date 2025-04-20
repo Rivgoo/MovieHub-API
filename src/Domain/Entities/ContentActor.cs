@@ -6,7 +6,7 @@ namespace Domain.Entities;
 /// <summary>
 /// Represents a content actor entity.
 /// </summary>
-public class ContentActor : IEntity
+public class ContentActor : BaseEntity<int>, IBaseEntity<int>
 {
 	/// <summary>
 	/// Gets or sets the unique identifier for the content actor.

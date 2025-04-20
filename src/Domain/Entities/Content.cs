@@ -67,18 +67,8 @@ public class Content : BaseEntity<int>, IBaseEntity<int>
 	public ICollection<ContentGenre> ContentGenres { get; set; } = default!;
 
 	/// <summary>
-	/// Gets or sets the collection of Genre entries associated with this content.
-	/// </summary>
-	public ICollection<Genre> Genres { get; set; } = default!;
-
-	/// <summary>
 	/// Gets or sets the collection of ContentActor entries associated with this content.
 	/// Represents the many-to-many relationship between Content and Actor (via ContentActor).
 	/// </summary>
 	public ICollection<ContentActor> ContentActors { get; set; } = default!;
-
-	/// <summary>
-	/// Gets or sets the collection of Actor entries associated with this content.
-	/// </summary>
-	public ICollection<Actor> Actors { get; set; } = default!;
 }

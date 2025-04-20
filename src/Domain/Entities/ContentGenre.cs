@@ -6,7 +6,7 @@ namespace Domain.Entities;
 /// <summary>
 /// Represents a many-to-many relationship between content and genres.
 /// </summary>
-public class ContentGenre : IEntity
+public class ContentGenre : BaseEntity<int>, IBaseEntity<int>
 {
 	/// <summary>
 	/// Gets or sets the unique identifier for the content-genre relationship.

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -43,37 +44,14 @@ namespace Infrastructure.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     name = table.Column<string>(type: "varchar(512)", maxLength: 512, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    capacity = table.Column<int>(type: "int", nullable: false),
+                    seats_per_row = table.Column<string>(type: "json", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_cinema_halls", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "contents",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    title = table.Column<string>(type: "varchar(512)", maxLength: 512, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    description = table.Column<string>(type: "longtext", maxLength: 16384, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    rating = table.Column<decimal>(type: "decimal(3,1)", nullable: true),
-                    release_year = table.Column<int>(type: "int", nullable: false),
-                    trailer_url = table.Column<string>(type: "varchar(2048)", maxLength: 2048, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    duration_minutes = table.Column<int>(type: "int", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_contents", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -157,87 +135,32 @@ namespace Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "content_actors",
-                columns: table => new
-                {
-                    content_id = table.Column<int>(type: "int", nullable: false),
-                    actor_id = table.Column<int>(type: "int", nullable: false),
-                    role_name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_content_actors", x => new { x.actor_id, x.content_id });
-                    table.ForeignKey(
-                        name: "fk_content_actors_actrors_actor_id",
-                        column: x => x.actor_id,
-                        principalTable: "actrors",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_content_actors_contents_content_id",
-                        column: x => x.content_id,
-                        principalTable: "contents",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "sessions",
+                name: "contents",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    start_time = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    content_id = table.Column<int>(type: "int", nullable: false),
-                    cinema_hall_id = table.Column<int>(type: "int", nullable: false),
-                    status = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                    title = table.Column<string>(type: "varchar(512)", maxLength: 512, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ticket_price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    description = table.Column<string>(type: "longtext", maxLength: 16384, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    rating = table.Column<decimal>(type: "decimal(3,1)", nullable: true),
+                    release_year = table.Column<int>(type: "int", nullable: false),
+                    trailer_url = table.Column<string>(type: "varchar(2048)", maxLength: 2048, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    duration_minutes = table.Column<int>(type: "int", nullable: false),
+                    actor_id = table.Column<int>(type: "int", nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_sessions", x => x.id);
+                    table.PrimaryKey("pk_contents", x => x.id);
                     table.ForeignKey(
-                        name: "fk_sessions_cinema_halls_cinema_hall_id",
-                        column: x => x.cinema_hall_id,
-                        principalTable: "cinema_halls",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_sessions_contents_content_id",
-                        column: x => x.content_id,
-                        principalTable: "contents",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "content_genres",
-                columns: table => new
-                {
-                    content_id = table.Column<int>(type: "int", nullable: false),
-                    genre_id = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_content_genres", x => new { x.content_id, x.genre_id });
-                    table.ForeignKey(
-                        name: "fk_content_genres_contents_content_id",
-                        column: x => x.content_id,
-                        principalTable: "contents",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_content_genres_genres_genre_id",
-                        column: x => x.genre_id,
-                        principalTable: "genres",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "fk_contents_actrors_actor_id",
+                        column: x => x.actor_id,
+                        principalTable: "actrors",
+                        principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -263,37 +186,6 @@ namespace Infrastructure.Migrations
                         name: "fk_role_claims_roles_role_id",
                         column: x => x.role_id,
                         principalTable: "roles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "favorite_contents",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    user_id = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    content_id = table.Column<int>(type: "int", nullable: false),
-                    time_added = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_favorite_contents", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_favorite_contents_contents_content_id",
-                        column: x => x.content_id,
-                        principalTable: "contents",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_favorite_contents_users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -410,6 +302,130 @@ namespace Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "content_actors",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    content_id = table.Column<int>(type: "int", nullable: false),
+                    actor_id = table.Column<int>(type: "int", nullable: false),
+                    role_name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_content_actors", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_content_actors_actrors_actor_id",
+                        column: x => x.actor_id,
+                        principalTable: "actrors",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_content_actors_contents_content_id",
+                        column: x => x.content_id,
+                        principalTable: "contents",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "content_genres",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    content_id = table.Column<int>(type: "int", nullable: false),
+                    genre_id = table.Column<int>(type: "int", nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_content_genres", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_content_genres_contents_content_id",
+                        column: x => x.content_id,
+                        principalTable: "contents",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_content_genres_genres_genre_id",
+                        column: x => x.genre_id,
+                        principalTable: "genres",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "favorite_contents",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    user_id = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    content_id = table.Column<int>(type: "int", nullable: false),
+                    time_added = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_favorite_contents", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_favorite_contents_contents_content_id",
+                        column: x => x.content_id,
+                        principalTable: "contents",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_favorite_contents_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "sessions",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    start_time = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    content_id = table.Column<int>(type: "int", nullable: false),
+                    cinema_hall_id = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ticket_price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_sessions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_sessions_cinema_halls_cinema_hall_id",
+                        column: x => x.cinema_hall_id,
+                        principalTable: "cinema_halls",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_sessions_contents_content_id",
+                        column: x => x.content_id,
+                        principalTable: "contents",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "bookings",
                 columns: table => new
                 {
@@ -462,14 +478,29 @@ namespace Infrastructure.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_content_actors_actor_id",
+                table: "content_actors",
+                column: "actor_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_content_actors_content_id",
                 table: "content_actors",
+                column: "content_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_content_genres_content_id",
+                table: "content_genres",
                 column: "content_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_content_genres_genre_id",
                 table: "content_genres",
                 column: "genre_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_contents_actor_id",
+                table: "contents",
+                column: "actor_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_favorite_contents_content_id",
@@ -563,9 +594,6 @@ namespace Infrastructure.Migrations
                 name: "sessions");
 
             migrationBuilder.DropTable(
-                name: "actrors");
-
-            migrationBuilder.DropTable(
                 name: "genres");
 
             migrationBuilder.DropTable(
@@ -579,6 +607,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "contents");
+
+            migrationBuilder.DropTable(
+                name: "actrors");
         }
     }
 }

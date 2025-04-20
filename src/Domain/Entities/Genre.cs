@@ -20,9 +20,4 @@ public class Genre : BaseEntity<int>, IBaseEntity<int>
 	/// Represents the many-to-many relationship between Content and Genre (via ContentGenre).
 	/// </summary>
 	public ICollection<ContentGenre> ContentGenres { get; set; } = default!;
-
-	/// <summary>
-	/// Gets or sets the collection of Content entries associated with this genre.
-	/// </summary>
-	public ICollection<Content> Contents { get; set; } = default!;
 }

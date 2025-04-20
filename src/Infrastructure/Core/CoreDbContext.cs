@@ -49,18 +49,6 @@ internal sealed class CoreDbContext(DbContextOptions<CoreDbContext> options) : I
 	{
 		base.OnModelCreating(modelBuilder);
 
-		#region Many-to-Many Relationships
-		modelBuilder.Entity<Content>()
-			.HasMany(e => e.Genres)
-			.WithMany(e => e.Contents)
-			.UsingEntity<ContentGenre>();
-
-		modelBuilder.Entity<Content>()
-			.HasMany(e => e.Actors)
-			.WithMany(e => e.Contents)
-			.UsingEntity<ContentActor>();
-		#endregion
-
 		#region Enum Conversion
 		modelBuilder.Entity<Booking>(entity =>
 		{
