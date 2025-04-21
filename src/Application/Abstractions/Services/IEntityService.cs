@@ -109,5 +109,9 @@ public interface IEntityService<TEntity, TId>
 	/// </returns>
 	Task<Result> DeleteByIdAsync(TId entityId);
 
+	/// <summary>
+	/// Asynchronously deletes an entity from the data store.
+	/// </summary>
+	/// The task result contains a <see cref="Result{TValue}"/> of type <typeparamref name="TEntity"/>.
 	Task<Result> DeleteAsync(TEntity entity);
 }

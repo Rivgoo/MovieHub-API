@@ -103,6 +103,16 @@ internal class ContentService(
 		return Result.Bad(deleteResult.Error!);
 	}
 
+	public override async Task<Result> DeleteAsync(Content entity)
+	{
+		var posterDeleteResult = await DeletePosterAsync(entity.Id);
+
+		if(posterDeleteResult.IsFailure)
+			return Result.Bad(posterDeleteResult.Error);
+
+		return await base.DeleteAsync(entity);
+	} 
+
 	protected override async Task<Result> ValidateEntityAsync(Content entity)
 	{
 		StringUtilities.TrimStringProperties(entity);
