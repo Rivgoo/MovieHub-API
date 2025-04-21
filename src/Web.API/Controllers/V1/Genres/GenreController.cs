@@ -29,7 +29,7 @@ namespace Web.API.Controllers.V1.Genres;
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/genres")]
 public class GenreController(IMapper mapper, IGenreService entityService) :
-	EntityApiController<Genre, int>(mapper, entityService)
+	EntityApiController<IGenreService>(mapper, entityService)
 {
 	/// <summary>
 	/// Checks if a Genre entity with the specified ID exists.

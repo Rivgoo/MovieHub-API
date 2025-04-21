@@ -1,5 +1,4 @@
 ﻿using Asp.Versioning;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.API.Core.BaseResponses;
@@ -24,7 +23,7 @@ public class UserController(
 	IMapper mapper,
 	IUserService entityService,
 	IUserRegistrator userRegistrator) :
-	EntityApiController<User, string>(mapper, entityService)
+	EntityApiController<IUserService>(mapper, entityService)
 {
 	private readonly IUserRegistrator _userRegistrator = userRegistrator;
 

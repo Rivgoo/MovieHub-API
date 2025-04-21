@@ -15,6 +15,8 @@ using Application.Users.Models;
 using Microsoft.Extensions.Options;
 using Web.API.Core.Options;
 using AutoMapper;
+using Microsoft.Extensions.FileProviders;
+
 
 
 #endregion
@@ -71,6 +73,7 @@ builder.Services.Configure<InitialAdminOptions>(builder.Configuration.GetSection
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddControllers()
@@ -104,6 +107,31 @@ if (app.Configuration.GetValue<bool>("UseSwagger"))
 }
 
 app.MapControllers();
+
+var publicDataFolder = app.Configuration.GetValue<string>("PublicDataFolder");
+
+if(string.IsNullOrWhiteSpace(publicDataFolder))
+	throw new ArgumentNullException(nameof(publicDataFolder), "Public data folder is not configured.");
+
+var publicFilesRoot = Path.Combine(AppContext.BaseDirectory, publicDataFolder);
+
+if (!Directory.Exists(publicFilesRoot))
+{
+	try
+	{
+		Directory.CreateDirectory(publicFilesRoot);
+	}
+	catch (Exception ex)
+	{
+		throw new InvalidOperationException($"Failed to create public files directory at {publicFilesRoot}", ex);
+	}
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+	FileProvider = new PhysicalFileProvider(publicFilesRoot),
+	RequestPath = ""
+});
 
 #region Try Initialize First Admin
 using (var scope = app.Services.CreateScope())

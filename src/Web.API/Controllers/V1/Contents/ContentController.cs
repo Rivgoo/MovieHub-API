@@ -10,6 +10,7 @@ using Domain;
 using Web.API.Controllers.V1.Contents.Requests;
 using Application.Contents.Abstractions.Services;
 using Web.API.Controllers.V1.Contents.Responses;
+using Application.Contents.Dtos;
 
 namespace Web.API.Controllers.V1.Contents;
 
@@ -23,8 +24,10 @@ namespace Web.API.Controllers.V1.Contents;
 /// <param name="entityService">The service for managing Content entities (<see cref="IContentService"/>).</param>
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/contents")]
-public class ContentController(IMapper mapper, IContentService entityService) :
-	EntityApiController<Content, int>(mapper, entityService)
+public class ContentController(
+	IMapper mapper, 
+	IContentService entityService) :
+	EntityApiController<IContentService>(mapper, entityService)
 {
 	/// <summary>
 	/// Checks if a Content entity with the specified ID exists.
@@ -56,19 +59,22 @@ public class ContentController(IMapper mapper, IContentService entityService) :
 	/// </summary>
 	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
 	/// <returns>An IActionResult containing the list of content items.</returns>
-	/// <response code="200">Returns a list of <c>ContentResponse</c> DTOs.</response> // Повертаємо DTO колекцію
+	/// <response code="200">Returns a list of <c>ContentDto</c> DTOs.</response> // Повертаємо DTO колекцію
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[AllowAnonymous]
 	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<ContentResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(IEnumerable<ContentDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
-		var contentItems = await _entityService.GetAllAsync(cancellationToken);
+		var contentItems = await _entityService.GetAllContentDtosAsync(cancellationToken);
 
-		return Ok(_mapper.Map<IEnumerable<ContentResponse>>(contentItems));
+		foreach (var item in contentItems)
+			item.PosterUrl = CreateFullPosterUrl(item.PosterUrl);
+
+		return Ok(contentItems);
 	}
 
 	/// <summary>
@@ -81,23 +87,27 @@ public class ContentController(IMapper mapper, IContentService entityService) :
 	/// <param name="id">The ID of the Content entity to retrieve.</param>
 	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
 	/// <returns>An IActionResult containing the content item DTO or an error if not found.</returns>
-	/// <response code="200">Returns the <c>ContentResponse</c> DTO.</response> // Повертаємо DTO
+	/// <response code="200">Returns the <c>ContentDto</c> DTO.</response> // Повертаємо DTO
 	/// <response code="400">If the provided ID is invalid (e.g., format error, if using complex IDs).</response> // Optional, depends on binding
 	/// <response code="404">If the entity with the specified ID is not found.</response>
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[AllowAnonymous]
 	[HttpGet("{id}")]
-	[ProducesResponseType(typeof(ContentResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ContentDto), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
 	{
-		var result = await _entityService.GetByIdAsync(id, cancellationToken);
+		var result = await _entityService.GetContentDtoAsync(id, cancellationToken);
+
+		var content = result.Value;
+
+		content!.PosterUrl = CreateFullPosterUrl(content.PosterUrl);
 
 		return result.Match(
-			content => Ok(_mapper.Map<ContentResponse>(content)),
+			_ => Ok(content),
 			error => result.ToActionResult()
 		);
 	}
@@ -208,5 +218,87 @@ public class ContentController(IMapper mapper, IContentService entityService) :
 			Ok,
 			error => result.ToActionResult()
 		);
+	}
+
+	/// <summary>
+	/// Uploads or updates the poster image for a specific Content entity.
+	/// </summary>
+	/// <summary>
+	/// This endpoint accepts an image file as a Base64 string, saves it to the server's static files directory,
+	/// and updates the Content entity's PosterUrl.
+	/// Requires authentication with the Admin role.
+	/// </summary>
+	/// <param name="id">The ID of the Content entity for which to upload the poster.</param>
+	/// <param name="base64String">The poster image content encoded as a Base64 string in the request body.</param>
+	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+	/// <returns>An IActionResult indicating the result of the upload operation.</returns>
+	/// <response code="200">Indicates successful upload and update (no body, or updated content entity body if needed).</response>
+	/// <response code="400">Returns an <c>Error</c> object for invalid Base64 string or unsupported image format (<c>FileErrors</c>).</response>
+	/// <response code="404">Returns an <c>Error</c> object if the Content entity with the specified ID is not found.</response>
+	/// <response code="500">Returns an <c>Error</c> object if a failure occurred during file saving or updating the entity (<c>FileErrors</c>).</response>
+	/// <response code="401">If the request does not contain a valid authentication token.</response>
+	/// <response code="403">If the authenticated user does not have the required 'Admin' role.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpPost("{id}/poster")]
+	[ProducesResponseType(typeof(UploadPosterResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> UploadPoster(int id, [FromBody] string base64String)
+	{
+		var result = await _entityService.SavePosterAsync(id, base64String);
+
+		return result.Match(
+			_ => Ok(new UploadPosterResponse(CreateFullPosterUrl(result.Value.PosterUrl))),
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Deletes the poster image for a specific Content entity.
+	/// </summary>
+	/// <summary>
+	/// This endpoint deletes the image file from the server's static files directory
+	/// and clears the PosterUrl on the Content entity.
+	/// Requires authentication with the Admin role.
+	/// </summary>
+	/// <param name="id">The ID of the Content entity for which to delete the poster.</param>
+	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+	/// <returns>An IActionResult indicating the result of the deletion operation.</returns>
+	/// <response code="200">Indicates successful deletion (no body).</response>
+	/// <response code="404">Returns an <c>Error</c> object if the Content entity is not found (optional, if DeletePosterAsync returns NotFound).</response>
+	/// <response code="500">Returns an <c>Error</c> object if a failure occurred during file deletion or updating the entity (<c>FileErrors</c>).</response>
+	/// <response code="401">If the request does not contain a valid authentication token.</response>
+	/// <response code="403">If the authenticated user does not have the required 'Admin' role.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpDelete("{id}/poster")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> DeletePoster(int id, CancellationToken cancellationToken)
+	{
+		var result = await _entityService.DeletePosterAsync(id);
+
+		return result.Match(
+			Ok,
+			error => result.ToActionResult()
+		);
+	}
+
+
+	private string? CreateFullPosterUrl(string? relativePath)
+	{
+		if (string.IsNullOrWhiteSpace(relativePath))
+			return null;
+
+		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+
+		relativePath = relativePath.StartsWith('/') ? relativePath : $"/{relativePath}";
+
+		return $"{baseUrl}{relativePath}";
 	}
 }

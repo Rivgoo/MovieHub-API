@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Domain.Entities;
+using System.Text.Json.Serialization;
 
 namespace Application.Results;
 
@@ -202,5 +203,10 @@ public sealed class Result<TValue> : Result
 	public static new Result<TValue> Bad(Error error)
 	{
 		return error is null ? throw new ArgumentNullException(nameof(error)) : new(error);
+	}
+
+	internal static Result<Content> Bad(object invalidPosterPath)
+	{
+		throw new NotImplementedException();
 	}
 }

@@ -42,6 +42,9 @@ public class Content : BaseEntity<int>, IBaseEntity<int>
 	[MaxLength(2048)]
 	public string? TrailerUrl { get; set; }
 
+	[MaxLength(512)]
+	public string? PosterUrl { get; set; }
+
 	/// <summary>
 	/// Gets or sets the duration of the content in minutes.
 	/// </summary>

@@ -22,4 +22,9 @@ public class ContentErrors : EntityErrors<Content, int>
 		$"{EntityName}.{nameof(InvalidTrailerUrl)}",
 		"Trailer URL must be a valid URL."
 	);
+
+	public static Error InvalidPosterPath => Error.InternalServerError(
+		$"{EntityName}.{nameof(InvalidPosterPath)}",
+		"Poster path must be a valid URL."
+	);
 }

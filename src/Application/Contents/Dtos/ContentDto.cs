@@ -1,9 +1,6 @@
-﻿namespace Web.API.Controllers.V1.Contents.Responses;
+﻿namespace Application.Contents.Dtos;
 
-/// <summary>
-/// Represents the response model for retrieving Content details.
-/// </summary>
-public class ContentResponse
+public class ContentDto
 {
 	/// <summary>
 	/// Gets or sets the unique identifier for the content.
@@ -36,9 +33,17 @@ public class ContentResponse
 	public string? TrailerUrl { get; set; }
 
 	/// <summary>
+	/// Gets or sets the URL of the content's poster image.
+	/// </summary>
+	public string? PosterUrl { get; set; }
+
+	/// <summary>
 	/// Gets or sets the duration of the content in minutes.
 	/// </summary>
 	public int DurationMinutes { get; set; }
+
+	public List<int> GenreIds { get; set; } 
+	public List<int> ActorIds { get; set; }
 
 	public DateTime CreatedAt { get; set; }
 	public DateTime UpdatedAt { get; set; }

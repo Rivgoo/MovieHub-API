@@ -1,7 +1,9 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Repositories;
+using Application.Files.Abstractions;
 using Domain.Entities;
 using Infrastructure.Core;
+using Infrastructure.Files;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -100,6 +102,8 @@ public static class Dependency
 					services.AddScoped(interfaceType, repositoryType);
 		}
 		#endregion
+
+		services.AddScoped<IContentFileStorageService, LocalContentFileStorageService>();
 
 		return services;
 	}
