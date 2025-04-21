@@ -18,6 +18,16 @@ internal class ContentActorService(
 	private readonly IContentService _contentService = contentService;
 	private readonly IGenreService _genreService = genreService;
 
+	public async Task<Result<ContentActor>> GetByDataAsync(int id, int actorId, CancellationToken cancellationToken = default)
+	{
+		var contentActor = await _entityRepository.GetByDataAsync(id, actorId, cancellationToken);
+
+		if (contentActor == null)
+			return Result<ContentActor>.Bad(EntityErrors<ContentActor, int>.NotFound);
+
+		return Result<ContentActor>.Ok(contentActor);
+	}
+
 	protected override async Task<Result> ValidateEntityAsync(ContentActor entity)
 	{
 		if (Guard.MinLength(entity.RoleName, 1))

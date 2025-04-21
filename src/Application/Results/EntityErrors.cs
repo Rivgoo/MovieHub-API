@@ -25,8 +25,11 @@ public class EntityErrors<TEntity, TId>
 	/// </summary>
 	/// <param name="id">The identifier of the entity that was not found.</param>
 	/// <returns>A <see cref="Error"/> instance representing the not found error.</returns>
-	public static Error NotFound(TId id)
+	public static Error NotFoundById(TId id)
 		=> Error.NotFound($"{EntityName}.NotFound", $"{EntityName} with Id '{id}' not found.");
+
+	public static Error NotFound
+		=> Error.NotFound($"{EntityName}.NotFound", $"{EntityName} not found.");
 
 	/// <summary>
 	/// Creates an error indicating that the entity object is null during a creation operation.

@@ -20,7 +20,7 @@ internal abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository
 		if (await ExistsByIdAsync(entityId, cancellationToken) == true)
 			return Result.Ok();
 
-		return Result.Bad(EntityErrors<TEntity, TId>.NotFound(entityId!));
+		return Result.Bad(EntityErrors<TEntity, TId>.NotFoundById(entityId!));
 	}
 
 	public virtual async Task<Result<TEntity>> GetByIdAsync(TId entityId, CancellationToken cancellationToken = default)
@@ -28,7 +28,7 @@ internal abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository
 		var entity = await _entityRepository.GetByIdAsync(entityId, cancellationToken);
 
 		if (entity == null)
-			return Result<TEntity>.Bad(EntityErrors<TEntity, TId>.NotFound(entityId));
+			return Result<TEntity>.Bad(EntityErrors<TEntity, TId>.NotFoundById(entityId));
 
 		return Result<TEntity>.Ok(entity);
 	}
@@ -75,15 +75,15 @@ internal abstract class BaseEntityService<TEntity, TId, TRepository>(TRepository
 
 		if (entityResult.IsFailure) return entityResult;
 
-		return await DeleteEntityAsync(entityResult.Value!);
+		return await DeleteAsync(entityResult.Value!);
 	}
-
-	protected abstract Task<Result> ValidateEntityAsync(TEntity entity);
-	protected virtual async Task<Result> DeleteEntityAsync(TEntity entity)
+	public virtual async Task<Result> DeleteAsync(TEntity entity)
 	{
 		_entityRepository.Remove(entity);
 		await _unitOfWork.SaveChangesAsync();
 
 		return Result.Ok();
 	}
+
+	protected abstract Task<Result> ValidateEntityAsync(TEntity entity);
 }

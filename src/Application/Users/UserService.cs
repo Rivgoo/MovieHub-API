@@ -44,7 +44,7 @@ internal class UserService(
 		var user = await entityRepository.GetByEmailAsync(email, cancellationToken);
 
 		if (user == null)
-			return Result<User>.Bad(EntityErrors<User, string>.NotFound(email));
+			return Result<User>.Bad(EntityErrors<User, string>.NotFoundById(email));
 
 		return Result<User>.Ok(user);
 	}

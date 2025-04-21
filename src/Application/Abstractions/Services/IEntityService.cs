@@ -29,7 +29,7 @@ public interface IEntityService<TEntity, TId>
 	/// A task that represents the asynchronous operation.
 	/// The task result contains a <see cref="Result{TValue}"/> of type <typeparamref name="TEntity"/>.
 	/// It will be <see cref="Result.Ok()"/> with the entity if found, or <see cref="Result.Bad(Error)"/>
-	/// with a <see cref="EntityErrors{TEntity, TId}.NotFound(TId)"/> error if not found.
+	/// with a <see cref="EntityErrors{TEntity, TId}.NotFoundById(TId)"/> error if not found.
 	/// </returns>
 	Task<Result<TEntity>> GetByIdAsync(TId entityId, CancellationToken cancellationToken = default);
 
@@ -69,7 +69,7 @@ public interface IEntityService<TEntity, TId>
 	/// A task that represents the asynchronous operation.
 	/// The task result contains a <see cref="Result"/>.
 	/// It will be <see cref="Result.Ok()"/> if the entity exists, or <see cref="Result.Bad(Error)"/>
-	/// with a <see cref="EntityErrors{TEntity, TId}.NotFound(TId)"/> error if the entity does not exist or <paramref name="entityId"/> is null.
+	/// with a <see cref="EntityErrors{TEntity, TId}.NotFoundById(TId)"/> error if the entity does not exist or <paramref name="entityId"/> is null.
 	/// </returns>
 	Task<Result> VerifyExistsByIdAsync(TId? entityId, CancellationToken cancellationToken = default);
 
@@ -108,4 +108,6 @@ public interface IEntityService<TEntity, TId>
 	/// or <see cref="Result.Bad(Error)"/> if the entity is not found or deletion fails.
 	/// </returns>
 	Task<Result> DeleteByIdAsync(TId entityId);
+
+	Task<Result> DeleteAsync(TEntity entity);
 }

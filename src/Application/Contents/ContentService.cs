@@ -29,7 +29,7 @@ internal class ContentService(
 		var content = await _entityRepository.GetContentDtoAsync(contentId, cancellationToken);
 
 		if (content == null)
-			return Result<ContentDto>.Bad(ContentErrors.NotFound(contentId));
+			return Result<ContentDto>.Bad(ContentErrors.NotFoundById(contentId));
 
 		return Result<ContentDto>.Ok(content);
 	}
@@ -45,7 +45,7 @@ internal class ContentService(
 		var content = await _entityRepository.GetByIdAsync(contentId);
 
 		if (content == null)
-			return Result<Content>.Bad(ContentErrors.NotFound(contentId));
+			return Result<Content>.Bad(ContentErrors.NotFoundById(contentId));
 
 		if (!string.IsNullOrWhiteSpace(content.PosterUrl))
 		{

@@ -26,7 +26,7 @@ internal class ContentRepository(CoreDbContext dbContext) :
 				CreatedAt = x.CreatedAt,
 				UpdatedAt = x.UpdatedAt,
 				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
-				ActorIds = x.ContentGenres.Select(a => a.Id).ToList()
+				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
 			})
 			.ToListAsync(cancellationToken);
 	}
@@ -47,7 +47,7 @@ internal class ContentRepository(CoreDbContext dbContext) :
 				CreatedAt = x.CreatedAt,
 				UpdatedAt = x.UpdatedAt,
 				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
-				ActorIds = x.ContentGenres.Select(a => a.Id).ToList()
+				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
 			})
 			.FirstOrDefaultAsync(cancellationToken);
 	}

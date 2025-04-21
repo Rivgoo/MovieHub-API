@@ -52,4 +52,7 @@ public class CreateContentRequest
 	[Required]
 	[Range(1, int.MaxValue)]
 	public int DurationMinutes { get; set; }
+
+	public List<int> GenreIds { get; set; } = [];
+	public List<int> ActorIds { get; set; } = [];
 }

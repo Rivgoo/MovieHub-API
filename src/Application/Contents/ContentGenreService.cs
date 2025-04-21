@@ -18,6 +18,16 @@ internal class ContentGenreService(
 	private readonly IContentService _contentService = contentService;
 	private readonly IGenreService _genreService = genreService;
 
+	public async Task<Result<ContentGenre>> GetByDataAsync(int contentId, int genreId, CancellationToken cancellationToken = default)
+	{
+		var contentGenre = await _entityRepository.GetByDataAsync(contentId, genreId, cancellationToken);
+
+		if (contentGenre == null)
+			return Result<ContentGenre>.Bad(EntityErrors<ContentGenre, int>.NotFound);
+
+		return Result<ContentGenre>.Ok(contentGenre);
+	}
+
 	protected override async Task<Result> ValidateEntityAsync(ContentGenre entity)
 	{
 		var contentExists = await _contentService.VerifyExistsByIdAsync(entity.ContentId);
