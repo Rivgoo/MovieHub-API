@@ -32,6 +32,7 @@ public class ContentController(
 {
 	private readonly IConfiguration _configuration = configuration;
 
+	[Authorize(Roles = RoleList.Admin)]
 	[HttpPost("seed-fake-data")]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
