@@ -105,13 +105,16 @@ internal class ContentService(
 
 	public override async Task<Result> DeleteAsync(Content entity)
 	{
-		var posterDeleteResult = await DeletePosterAsync(entity.Id);
+		if (!string.IsNullOrEmpty(entity.PosterUrl))
+		{
+			var posterDeletedResult = await _fileStorageService.DeleteFileAsync(entity.PosterUrl);
 
-		if(posterDeleteResult.IsFailure)
-			return Result.Bad(posterDeleteResult.Error);
+			if (posterDeletedResult.IsFailure)
+				return Result.Bad(posterDeletedResult.Error!);
+		}
 
 		return await base.DeleteAsync(entity);
-	} 
+	}
 
 	protected override async Task<Result> ValidateEntityAsync(Content entity)
 	{

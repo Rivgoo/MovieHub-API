@@ -46,6 +46,16 @@ internal abstract class OperationsRepository<TEntity, TId>(CoreDbContext dbConte
 			_entities.Entry(entity).State = EntityState.Modified;
 		}
 	}
+
+	public override void Remove(TEntity entity)
+	{
+		var trackedEntry = _dbContext.Set<TEntity>().Local.FirstOrDefault(e => e.Id.Equals(entity.Id));
+
+		if (trackedEntry != null)
+			_entities.Remove(trackedEntry);
+		else
+			_entities.Remove(entity);
+	}
 }
 
 internal abstract class OperationsRepository<TEntity>(CoreDbContext dbContext) :
