@@ -18,6 +18,13 @@ internal class ContentActorService(
 	private readonly IContentService _contentService = contentService;
 	private readonly IGenreService _genreService = genreService;
 
+	public async Task<Result<bool>> ExistsByDataAsync(int id, int actorId, CancellationToken cancellationToken = default)
+	{
+		var contentActor = await _entityRepository.ExistsByDataAsync(id, actorId, cancellationToken);
+
+		return Result<bool>.Ok(contentActor);
+	}
+
 	public async Task<Result<ContentActor>> GetByDataAsync(int id, int actorId, CancellationToken cancellationToken = default)
 	{
 		var contentActor = await _entityRepository.GetByDataAsync(id, actorId, cancellationToken);
@@ -26,6 +33,16 @@ internal class ContentActorService(
 			return Result<ContentActor>.Bad(EntityErrors<ContentActor, int>.NotFound);
 
 		return Result<ContentActor>.Ok(contentActor);
+	}
+
+	public override async Task<Result<ContentActor>> CreateAsync(ContentActor newEntity)
+	{
+		var alreadyExists = await ExistsByDataAsync(newEntity.ContentId, newEntity.ActorId);
+
+		if (alreadyExists.IsSuccess && alreadyExists.Value)
+			return Result<ContentActor>.Bad(Error.BadRequest($"{nameof(ContentActor)}.AlreadyExists", "This actor is already linked to this content."));
+
+		return await base.CreateAsync(newEntity);
 	}
 
 	protected override async Task<Result> ValidateEntityAsync(ContentActor entity)

@@ -7,4 +7,5 @@ namespace Application.Contents.Abstractions.Services;
 public interface IContentActorService : IEntityService<ContentActor, int>
 {
 	Task<Result<ContentActor>> GetByDataAsync(int id, int actorId, CancellationToken cancellationToken = default);
+	Task<Result<bool>> ExistsByDataAsync(int id, int actorId, CancellationToken cancellationToken = default);
 }

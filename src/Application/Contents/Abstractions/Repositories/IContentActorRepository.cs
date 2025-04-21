@@ -5,5 +5,6 @@ namespace Application.Contents.Abstractions;
 
 public interface IContentActorRepository : IEntityOperations<ContentActor, int>
 {
+	Task<bool> ExistsByDataAsync(int id, int actorId, CancellationToken cancellationToken);
 	Task<ContentActor?> GetByDataAsync(int id, int actorId, CancellationToken cancellationToken);
 }

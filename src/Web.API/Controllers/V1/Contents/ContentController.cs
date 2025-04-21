@@ -399,19 +399,20 @@ public class ContentController(
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
 	/// <response code="403">If the authenticated user does not have the required 'Admin' role.</response>
 	[Authorize(Roles = RoleList.Admin)]
-	[HttpPost("{id}/actors/{actorId}")]
+	[HttpPost("{id}/actors")]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status409Conflict)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
-	public async Task<IActionResult> AddActor(int id, int actorId)
+	public async Task<IActionResult> AddActor(int id, [FromBody] AddActorRequest request)
 	{
 		var contentActor = new ContentActor
 		{
 			ContentId = id,
-			ActorId = actorId
+			ActorId = request.ActorId,
+			RoleName = request.RoleName
 		};
 
 		var result = await _contentActorService.CreateAsync(contentActor);

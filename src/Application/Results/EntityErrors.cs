@@ -27,7 +27,6 @@ public class EntityErrors<TEntity, TId>
 	/// <returns>A <see cref="Error"/> instance representing the not found error.</returns>
 	public static Error NotFoundById(TId id)
 		=> Error.NotFound($"{EntityName}.NotFound", $"{EntityName} with Id '{id}' not found.");
-
 	public static Error NotFound
 		=> Error.NotFound($"{EntityName}.NotFound", $"{EntityName} not found.");
 
@@ -59,7 +58,7 @@ public class EntityErrors<TEntity, TId>
 	/// <param name="maxLength">The maximum allowed length.</param>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error StringTooLong(string propertyName, int maxLength)
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}TooLong", $"Property '{propertyName}' is too long. Maximum length is {maxLength}.");
+		=> Error.BadRequest($"{EntityName}.Validation.TooLong", $"Property '{propertyName}' is too long. Maximum length is {maxLength}.");
 
 	/// <summary>
 	/// Creates a validation error indicating a string property value is too short, null, or empty.
@@ -68,7 +67,7 @@ public class EntityErrors<TEntity, TId>
 	/// <param name="minLength">The minimum required length.</param>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error StringTooShort(string propertyName, int minLength)
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}TooShort", $"Property '{propertyName}' must be at least {minLength} characters long.");
+		=> Error.BadRequest($"{EntityName}.Validation.TooShort", $"Property '{propertyName}' must be at least {minLength} characters long.");
 
 	/// <summary>
 	/// Creates a validation error indicating a numeric or comparable property value is too high.
@@ -79,7 +78,7 @@ public class EntityErrors<TEntity, TId>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error ValueTooHigh<TValue>(string propertyName, TValue maxValue)
 		where TValue : IComparable<TValue>
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}TooHigh", $"Property '{propertyName}' must not be greater than {maxValue}.");
+		=> Error.BadRequest($"{EntityName}.Validation.TooHigh", $"Property '{propertyName}' must not be greater than {maxValue}.");
 
 	/// <summary>
 	/// Creates a validation error indicating a numeric or comparable property value is too low.
@@ -90,7 +89,7 @@ public class EntityErrors<TEntity, TId>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error ValueTooLow<TValue>(string propertyName, TValue minValue)
 		where TValue : IComparable<TValue>
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}TooLow", $"Property '{propertyName}' must be at least {minValue}.");
+		=> Error.BadRequest($"{EntityName}.Validation.TooLow", $"Property '{propertyName}' must be at least {minValue}.");
 
 	/// <summary>
 	/// Creates a validation error indicating that a required property value is missing or null.
@@ -98,7 +97,7 @@ public class EntityErrors<TEntity, TId>
 	/// <param name="propertyName">The name of the required property.</param>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error RequiredProperty(string propertyName)
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}Required", $"Property '{propertyName}' is required and cannot be null or empty.");
+		=> Error.BadRequest($"{EntityName}.Validation.Required", $"Property '{propertyName}' is required and cannot be null or empty.");
 
 	/// <summary>
 	/// Creates a validation error for an invalid format of a property value.
@@ -107,7 +106,7 @@ public class EntityErrors<TEntity, TId>
 	/// <param name="formatDescription">A description of the expected format.</param>
 	/// <returns>A <see cref="Error"/> instance representing the validation error.</returns>
 	public static Error InvalidFormat(string propertyName, string formatDescription = "invalid format")
-		=> Error.BadRequest($"{EntityName}.Validation.{propertyName}InvalidFormat", $"Property '{propertyName}' has {formatDescription}.");
+		=> Error.BadRequest($"{EntityName}.Validation.InvalidFormat", $"Property '{propertyName}' has {formatDescription}.");
 
 	/// <summary>
 	/// Creates an error indicating a conflict, typically due to a unique constraint violation on a specific property.
@@ -118,7 +117,7 @@ public class EntityErrors<TEntity, TId>
 	/// <returns>A <see cref="Error"/> instance representing the conflict error.</returns>
 	public static Error Conflict<TValue>(string propertyName, TValue conflictingValue)
 	   where TValue : notnull
-	   => Error.Conflict($"{EntityName}.Conflict.{propertyName}", $"{EntityName} with {propertyName} '{conflictingValue}' already exists.");
+	   => Error.Conflict($"{EntityName}.Conflict", $"{EntityName} with {propertyName} '{conflictingValue}' already exists.");
 
 	/// <summary>
 	/// Creates an error indicating that the entity is in an invalid state for the requested operation.
