@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions.Repositories;
 using Domain.Abstractions;
 using Infrastructure.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Abstractions;
 
@@ -20,7 +21,15 @@ internal abstract class BaseOperationsRepository<TEntity>(CoreDbContext dbContex
 	}
 	public virtual void Update(TEntity entity)
 	{
-		_entities.Update(entity);
+		var trackedEntry = _dbContext.Set<TEntity>().Local.FirstOrDefault(e => e.Equals(entity));
+
+		if (trackedEntry != null)
+			_dbContext.Entry(trackedEntry).CurrentValues.SetValues(entity);
+		else
+		{
+			_entities.Attach(entity);
+			_entities.Entry(entity).State = EntityState.Modified;
+		}
 	}
 	public virtual void UpdateRange(ICollection<TEntity> entities)
 	{

@@ -33,6 +33,19 @@ internal abstract class OperationsRepository<TEntity, TId>(CoreDbContext dbConte
 	{
 		return await _entities.AnyAsync(e => e.Id.Equals(id), cancellationToken);
 	}
+
+	public override void Update(TEntity entity)
+	{
+		var trackedEntry = _dbContext.Set<TEntity>().Local.FirstOrDefault(e => e.Id.Equals(entity.Id));
+
+		if (trackedEntry != null)
+			_dbContext.Entry(trackedEntry).CurrentValues.SetValues(entity);
+		else
+		{
+			_entities.Attach(entity);
+			_entities.Entry(entity).State = EntityState.Modified;
+		}
+	}
 }
 
 internal abstract class OperationsRepository<TEntity>(CoreDbContext dbContext) :

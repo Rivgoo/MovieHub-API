@@ -27,7 +27,7 @@ public abstract class BaseEntity<TId> : IBaseEntity<TId>
 	/// </value>
 	[Key]
 	[Required]
-	public required TId Id { get; set; }
+	public TId Id { get; set; }
 
 	/// <summary>
 	/// Gets or sets the date and time (typically UTC) when the entity was created.
