@@ -14,6 +14,8 @@ public static class ApplicationBuilderExtensions
 	public static WebApplication ConfigureRequestPipeline(this WebApplication app, 
 		IHostEnvironment environment, IConfiguration configuration)
 	{
+		app.UseCors("AllowSpecificOrigin");
+
 		app.UseAuthentication();
 		app.UseAuthorization();
 

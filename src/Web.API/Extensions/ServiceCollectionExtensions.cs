@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
 	/// </summary>
 	public static IServiceCollection ConfigureApplicationServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
 	{
+		services.AddCORS(configuration);
 		services.AddJwtAuthentication(configuration);
 		services.AddApiVersioningConfig();
 		services.AddSwaggerConfiguration();
@@ -107,6 +108,25 @@ public static class ServiceCollectionExtensions
 	{
 		services.AddControllers()
 			.AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+		return services;
+	}
+
+	private static IServiceCollection AddCORS(this IServiceCollection services, IConfiguration configuration)
+	{
+		var origins = configuration.GetSection("AllowedOrigins").Get<string[]>() ??
+			throw new ArgumentNullException("Allowed origins are not configured.");
+
+		services.AddCors(options =>
+		{
+			options.AddPolicy("AllowSpecificOrigin",
+				policyBuilder =>
+				{
+					policyBuilder.WithOrigins(origins)
+								 .AllowAnyHeader()
+								 .AllowAnyMethod();
+				});
+		});
 
 		return services;
 	}
