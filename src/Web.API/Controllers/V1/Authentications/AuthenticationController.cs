@@ -91,8 +91,6 @@ public class AuthenticationController(
 
 		var response = new AuthenticationResponse()
 		{
-			UserId = authenticationResult.User!.Id,
-			UserRole = authenticationResult.User.Role,
 			AccessToken = _jwtAuthentication.GenerateToken(authenticationResult.User!.Id, authenticationResult.User.Role)
 		};
 
