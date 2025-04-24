@@ -22,10 +22,10 @@ jobs:
 
       # maxcpucount:1 потрібен, щоб уникнути багу з білду проекту на багатоядерному процесорі.
       - name: Build
-        run: dotnet build MoviePoster-API.sln -c Release --no-self-contained /maxcpucount:1
+        run: dotnet build MovieHub-API.sln -c Release --no-self-contained /maxcpucount:1
 
       - name: Publish
-        run: dotnet publish MoviePoster-API.sln -c Release --no-self-contained -o "./publish" /maxcpucount:1
+        run: dotnet publish MovieHub-API.sln -c Release --no-self-contained -o "./publish" /maxcpucount:1
         
       # deploy powershell script
       # source-path (де була опублікована наша програма)
