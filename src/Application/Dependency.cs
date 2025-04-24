@@ -1,4 +1,6 @@
 ﻿using Application.Abstractions.Services;
+using Application.Filters.Abstractions;
+using Application.Filters.Services;
 using Application.Users;
 using Application.Users.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,8 @@ public static class Dependency
 
 		services.AddScoped<IUserRegistrator, UserRegistrator>();
 		#endregion
+
+		services.AddScoped(typeof(IFilterService<,>), typeof(FilterService<,>));
 
 		return services;
 	}
