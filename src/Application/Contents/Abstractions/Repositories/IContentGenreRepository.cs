@@ -1,7 +1,7 @@
 ﻿using Application.Abstractions.Repositories;
 using Domain.Entities;
 
-namespace Application.Contents.Abstractions;
+namespace Application.Contents.Abstractions.Repositories;
 
 public interface IContentGenreRepository : IEntityOperations<ContentGenre, int>
 {

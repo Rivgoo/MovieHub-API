@@ -2,7 +2,7 @@
 using Application.Contents.Dtos;
 using Domain.Entities;
 
-namespace Application.Contents.Abstractions;
+namespace Application.Contents.Abstractions.Repositories;
 
 public interface IContentRepository : IEntityOperations<Content, int>
 {

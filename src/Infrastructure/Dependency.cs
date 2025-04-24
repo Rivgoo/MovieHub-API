@@ -1,9 +1,12 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Repositories;
+using Application.Contents;
 using Application.Files.Abstractions;
+using Application.Filters.Abstractions;
 using Domain.Entities;
 using Infrastructure.Core;
 using Infrastructure.Files;
+using Infrastructure.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -104,6 +107,10 @@ public static class Dependency
 		#endregion
 
 		services.AddScoped<IContentFileStorageService, LocalContentFileStorageService>();
+
+		#region Filters
+		services.AddScoped<ISorter<Content, ContentFilter>, ContentSorter>();
+		#endregion
 
 		return services;
 	}

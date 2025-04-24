@@ -11,6 +11,9 @@ using Web.API.Controllers.V1.Contents.Requests;
 using Application.Contents.Abstractions.Services;
 using Web.API.Controllers.V1.Contents.Responses;
 using Application.Contents.Dtos;
+using Application.Filters.Abstractions;
+using Application.Filters;
+using Application.Contents;
 
 namespace Web.API.Controllers.V1.Contents;
 
@@ -29,12 +32,66 @@ public class ContentController(
 	IContentActorService contentActorService,
 	IConfiguration configuration,
 	IMapper mapper,
-	IContentService entityService) :
+	IContentService entityService,
+	IFilterService<Content, ContentFilter> filterService) :
 	EntityApiController<IContentService>(mapper, entityService)
 {
 	private readonly IConfiguration _configuration = configuration;
 	private readonly IContentGenreService _contentGenreService = contentGenreService;
 	private readonly IContentActorService _contentActorService = contentActorService;
+	private readonly IFilterService<Content, ContentFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves content items based on filter, pagination, and ordering criteria.
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "Title", "ReleaseYear"). Case-sensitive based on implementation.</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object containing search terms, ranges, etc.</param>
+	/// <response code="200">Returns the paginated list of content items.</response>
+	/// <response code="400">Returns an error if the input (page size, ordering, filter) is invalid.</response>
+	/// <response code="401">Returns if the user is unauthorized.</response>
+	[AllowAnonymous]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<ContentDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] ContentFilter filter)
+	{
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		return (await _filterService.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync(x => new ContentDto
+			{
+				Id = x.Id,
+				Title = x.Title,
+				Rating = x.Rating,
+				ReleaseYear = x.ReleaseYear,
+				Description = x.Description,
+				PosterUrl = x.PosterUrl,
+				TrailerUrl = x.TrailerUrl,
+				DurationMinutes = x.DurationMinutes,
+				CreatedAt = x.CreatedAt,
+				UpdatedAt = x.UpdatedAt,
+				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
+				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
+			})).ToActionResult();
+	}
 
 	/// <summary>
 	/// Seeds fake Content entities into the database.
@@ -100,7 +157,7 @@ public class ContentController(
 	/// </summary>
 	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
 	/// <response code="200">Returns a list of <c>ContentDto</c> DTOs.</response> // Повертаємо DTO колекцію
-	[AllowAnonymous]
+	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet]
 	[ProducesResponseType(typeof(IEnumerable<ContentDto>), StatusCodes.Status200OK)]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)

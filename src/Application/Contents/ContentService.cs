@@ -1,6 +1,6 @@
 ﻿using Application.Abstractions;
 using Application.Abstractions.Services;
-using Application.Contents.Abstractions;
+using Application.Contents.Abstractions.Repositories;
 using Application.Contents.Abstractions.Services;
 using Application.Contents.Dtos;
 using Application.Files.Abstractions;
