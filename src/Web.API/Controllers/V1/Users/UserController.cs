@@ -39,6 +39,20 @@ public class UserController(
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	public async Task<IActionResult> ExistsById(string id)
 		=> Ok(new ExistsResponse(await _entityService.ExistsByIdAsync(id)));
+	
+	/// <summary>
+	/// Retrieves basic information for a specific user by their ID.
+	/// </summary>
+	/// <param name="id">The unique identifier of the user.</param>
+	/// <response code="200">Returns the user's basic information.</response>
+	/// <response code="404">If a user with the specified ID is not found.</response>
+	/// <response code="401">If the client is not authorized to perform this action.</response>
+	[HttpGet("{id}/info")]
+	[ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> GetInfoById(string id)
+		=> (await _entityService.GetUserInfoByIdAsync(id)).ToActionResult();
 
 	/// <summary>
 	/// Registers a new user with the 'Admin' role.

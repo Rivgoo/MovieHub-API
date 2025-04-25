@@ -49,6 +49,16 @@ internal class UserService(
 		return Result<User>.Ok(user);
 	}
 
+	public async Task<Result<UserInfo>> GetUserInfoByIdAsync(string id, CancellationToken cancellationToken = default)
+	{
+		var userInfo = await entityRepository.GetUserInfoByIdAsync(id, cancellationToken);
+
+		if (userInfo == null)
+			return Result<UserInfo>.Bad(EntityErrors<User, string>.NotFoundById(id));
+
+		return Result<UserInfo>.Ok(userInfo);
+	}
+
 	public async Task<AuthenticationResult> TryAuthentication(string email, string password)
 	{
 		var result = new AuthenticationResult();
