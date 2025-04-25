@@ -5,6 +5,7 @@ using Application.Contents.Abstractions.Services;
 using Application.Results;
 using Application.Sessions.Abstractions;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Sessions;
 
@@ -17,6 +18,13 @@ internal class SessionService(
 {
 	private readonly IContentService _contentService = contentService;
 	private readonly ICinemaHallService _cinemaHallService = cinemaHallService;
+
+	public override async Task<Result<Session>> CreateAsync(Session newEntity)
+	{
+		newEntity.Status = SessionStatus.Scheduled;
+
+		return await base.CreateAsync(newEntity);
+	}
 
 	protected override async Task<Result> ValidateEntityAsync(Session entity)
 	{
