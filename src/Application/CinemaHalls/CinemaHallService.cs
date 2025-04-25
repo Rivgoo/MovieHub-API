@@ -8,7 +8,7 @@ using Domain.Entities;
 namespace Application.CinemaHalls;
 
 internal class CinemaHallService(
-	ICinemaHallRepository entityRepository, IUnitOfWork unitOfWork) : 
+	ICinemaHallRepository entityRepository, IUnitOfWork unitOfWork) :
 	BaseEntityService<CinemaHall, int, ICinemaHallRepository>(entityRepository, unitOfWork), ICinemaHallService
 {
 	protected override async Task<Result> ValidateEntityAsync(CinemaHall entity)
@@ -21,12 +21,17 @@ internal class CinemaHallService(
 		if (Guard.MaxLength(entity.Name, 512))
 			return Result.Bad(EntityErrors<CinemaHall, int>.StringTooLong(nameof(entity.Name), 512));
 
-		if(entity.SeatsPerRow == null || entity.SeatsPerRow.Count == 0)
+		if (entity.SeatsPerRow == null || entity.SeatsPerRow.Count == 0)
 			return Result.Bad(CinemaHallErrors.SeatsPerRowEmpty);
+
+		if (entity.SeatsPerRow.Count > 1000)
+			return Result.Bad(CinemaHallErrors.SeatsPerRowTooMuch);
 
 		foreach (var seats in entity.SeatsPerRow)
 			if (seats <= 0)
 				return Result.Bad(CinemaHallErrors.SeatsRowEmpty);
+			else if (seats > 1000)
+				return Result.Bad(CinemaHallErrors.SeatsRowTooMuch);
 
 		return Result.Ok();
 	}
