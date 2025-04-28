@@ -5,5 +5,5 @@ namespace Application.Bookings.Abstractions;
 
 public interface IBookingService : IEntityService<Booking, int>
 {
-	Task<bool> IsSeatBooked(int sessionId, int seatId);
+	Task<bool> IsSeatBooked(int sessionId, int rowNumber, int seatNumber);
 }

@@ -18,8 +18,8 @@ internal class BookingService(
 	private readonly IUserService _userService = userService;
 	private readonly ISessionService _sessionService = sessionService;
 
-	public async Task<bool> IsSeatBooked(int sessionId, int seatId)
-		=> await _entityRepository.IsSeatBooked(sessionId, seatId);
+	public async Task<bool> IsSeatBooked(int sessionId, int rowNumber, int seatNumber)
+		=> await _entityRepository.IsSeatBooked(sessionId, rowNumber, seatNumber);
 
 	protected override async Task<Result> ValidateEntityAsync(Booking entity)
 	{
@@ -33,7 +33,7 @@ internal class BookingService(
 		if (userExists.IsFailure)
 			return userExists;
 
-		if(await IsSeatBooked(entity.SessionId, entity.SeatId))
+		if(await IsSeatBooked(entity.SessionId, entity.RowNumber, entity.SeatNumber))
 			return Result.Bad(BookingErrors.SeatIsBooked);
 
 		return Result.Ok();

@@ -19,7 +19,7 @@ public class BookingErrors : EntityErrors<Booking, int>
 	/// </summary>
 	/// <value>An <see cref="Error"/> instance for the scenario where a seat is already booked.</value>
 	public static Error SeatIsBooked => Error.AccessForbidden(
-		$"{EntityName}.{nameof(SeatIsBooked)}", 
+		$"{EntityName}.{nameof(SeatIsBooked)}",
 		"The selected seat is already booked.");
 
 	public static Error SessionIsCompleted => Error.AccessForbidden(
@@ -29,4 +29,14 @@ public class BookingErrors : EntityErrors<Booking, int>
 	public static Error SessionIsStarted => Error.AccessForbidden(
 		$"{EntityName}.{nameof(SessionIsStarted)}",
 		"The selected session has already started.");
+
+	public static Error AccessDenied =>
+		Error.AccessForbidden(
+		$"{EntityName}.{nameof(AccessDenied)}",
+		"User does not have permission to access this booking.");
+
+	public static Error UserIdMissing =>
+		Error.BadRequest(
+		$"{EntityName}.{nameof(UserIdMissing)}",
+		"User ID could not be determined from token.");
 }
