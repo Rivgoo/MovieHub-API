@@ -1,5 +1,8 @@
 ﻿using Application.Bookings;
 using Application.Bookings.Abstractions;
+using Application.Bookings.Dtos;
+using Application.Filters;
+using Application.Filters.Abstractions;
 using Application.Results;
 using Asp.Versioning;
 using AutoMapper;
@@ -23,9 +26,67 @@ namespace Web.API.Controllers.V1.Bookings;
 /// <param name="entityService">The service for managing Booking entities.</param>
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/bookings")]
-public class BookingController(IMapper mapper, IBookingService entityService) :
+public class BookingController(
+	IMapper mapper,
+	IBookingService entityService,
+	IFilterService<Booking, BookingFilter> filterService) :
 	EntityApiController<IBookingService>(mapper, entityService)
 {
+	private readonly IFilterService<Booking, BookingFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves booking items based on filter, pagination, and ordering criteria.
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page.</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "CreatedAt", "Status").</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object.</param>
+	/// <response code="200">Returns the paginated list of booking DTOs.</response>
+	/// <response code="400">Returns an error if the input is invalid.</response>
+	/// <response code="401">If the user is unauthorized.</response>
+	/// <response code="403">If the user is not an Admin.</response>
+	[Authorize]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<BookingDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] BookingFilter filter)
+	{
+		if (!User.IsInRole(RoleList.Admin))
+		{
+			var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			filter.UserId = currentUserId;
+		}
+
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["CreatedAt"];
+			orderType = [QueryableOrderType.OrderByDescending];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _filterService.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<BookingDto, IBookingSelector>();
+
+		return filterResult.ToActionResult();
+	}
+
 	/// <summary>
 	/// Checks if a Booking entity with the specified ID exists.
 	/// </summary>
@@ -48,13 +109,13 @@ public class BookingController(IMapper mapper, IBookingService entityService) :
 	/// <response code="403">If the user is not an Admin.</response>
 	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<BookingResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(IEnumerable<BookingDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
 		var bookings = await _entityService.GetAllAsync(cancellationToken);
-		return Ok(_mapper.Map<IEnumerable<BookingResponse>>(bookings));
+		return Ok(_mapper.Map<IEnumerable<BookingDto>>(bookings));
 	}
 
 	/// <summary>
@@ -67,7 +128,7 @@ public class BookingController(IMapper mapper, IBookingService entityService) :
 	/// <response code="401">If the user is unauthorized.</response>
 	/// <response code="403">If the user is not the owner or an Admin.</response>
 	[HttpGet("{id}")]
-	[ProducesResponseType(typeof(BookingResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(BookingDto), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -83,7 +144,7 @@ public class BookingController(IMapper mapper, IBookingService entityService) :
 		if (result.Value!.UserId != currentUserId && !User.IsInRole(RoleList.Admin))
 			return Result.Bad(BookingErrors.AccessDenied).ToActionResult();
 
-		return Ok(_mapper.Map<BookingResponse>(result.Value));
+		return Ok(_mapper.Map<BookingDto>(result.Value));
 	}
 
 	/// <summary>

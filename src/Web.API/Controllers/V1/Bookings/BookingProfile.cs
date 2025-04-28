@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Application.Bookings.Dtos;
+using AutoMapper;
 using Domain.Entities;
 using Web.API.Controllers.V1.Bookings.Requests;
 using Web.API.Controllers.V1.Bookings.Responses;
@@ -11,6 +12,6 @@ public class BookingProfile : Profile
 	{
 		CreateMap<CreateBookingRequest, Booking>();
 
-		CreateMap<Booking, BookingResponse>();
+		CreateMap<Booking, BookingDto>();
 	}
 }
