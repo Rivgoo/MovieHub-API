@@ -3,6 +3,8 @@ using Application.Abstractions.Repositories;
 using Application.Actors;
 using Application.Actors.Abstractions;
 using Application.Actors.Dtos;
+using Application.CinemaHalls;
+using Application.CinemaHalls.Abstractions;
 using Application.Contents;
 using Application.Files.Abstractions;
 using Application.Filters.Abstractions;
@@ -117,9 +119,11 @@ public static class Dependency
 		services.AddScoped<ISorter<Content, ContentFilter>, ContentSorter>();
 		services.AddScoped<ISorter<Session, SessionFilter>, SessionSorter>();
 		services.AddScoped<ISorter<Actor, ActorFilter>, ActorSorter>();
+		services.AddScoped<ISorter<CinemaHall, CinemaHallFilter>, CinemaHallSorter>();
 
 		services.AddScoped<ISessionSelector, SessionSelector>();
 		services.AddScoped<IActorSelector, ActorSelector>();
+		services.AddScoped<ICinemaHallSelector, CinemaHallSelector>();
 		#endregion
 
 		return services;

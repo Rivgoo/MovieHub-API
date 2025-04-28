@@ -5,11 +5,14 @@ using Domain.Entities;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Web.API.Controllers.V1.CinemaHalls.Responses;
 using Web.API.Core.BaseResponses;
 using Web.API.Core;
 using Application.Results;
 using Web.API.Controllers.V1.CinemaHalls.Request;
+using Application.CinemaHalls;
+using Application.Filters.Abstractions;
+using Application.CinemaHalls.Dtos;
+using Application.Filters;
 
 namespace Web.API.Controllers.V1.CinemaHalls;
 
@@ -20,9 +23,57 @@ namespace Web.API.Controllers.V1.CinemaHalls;
 /// <param name="entityService">The service for managing CinemaHall entities (<see cref="ICinemaHallService"/>).</param>
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/cinema-halls")]
-public class CinemaHallController(IMapper mapper, ICinemaHallService entityService) :
+public class CinemaHallController(
+	IMapper mapper, 
+	ICinemaHallService entityService,
+	IFilterService<CinemaHall, CinemaHallFilter> filterService) :
 	EntityApiController<ICinemaHallService>(mapper, entityService)
 {
+	private readonly IFilterService<CinemaHall, CinemaHallFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves cinema hall items based on filter, pagination, and ordering criteria.
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "Name").</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object.</param>
+	/// <response code="200">Returns the paginated list of cinema hall DTOs.</response>
+	/// <response code="400">Returns an error if the input (page size, ordering, filter) is invalid.</response>
+	[AllowAnonymous]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<CinemaHallDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] CinemaHallFilter filter)
+	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["Name"];
+			orderType = [QueryableOrderType.OrderBy];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _filterService.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<CinemaHallDto, ICinemaHallSelector>();
+
+		return filterResult.ToActionResult();
+	}
+
 	/// <summary>
 	/// Checks if a CinemaHall entity with the specified ID exists.
 	/// </summary>
@@ -57,14 +108,14 @@ public class CinemaHallController(IMapper mapper, ICinemaHallService entityServi
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<CinemaHallResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(IEnumerable<CinemaHallDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
 		var cinemaHalls = await _entityService.GetAllAsync(cancellationToken);
 
-		return Ok(_mapper.Map<IEnumerable<CinemaHallResponse>>(cinemaHalls));
+		return Ok(_mapper.Map<IEnumerable<CinemaHallDto>>(cinemaHalls));
 	}
 
 	/// <summary>
@@ -84,7 +135,7 @@ public class CinemaHallController(IMapper mapper, ICinemaHallService entityServi
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[AllowAnonymous]
 	[HttpGet("{id}")]
-	[ProducesResponseType(typeof(CinemaHallResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(CinemaHallDto), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -93,7 +144,7 @@ public class CinemaHallController(IMapper mapper, ICinemaHallService entityServi
 		var result = await _entityService.GetByIdAsync(id, cancellationToken);
 
 		return result.Match(
-			cinemaHall => Ok(_mapper.Map<CinemaHallResponse>(cinemaHall)),
+			cinemaHall => Ok(_mapper.Map<CinemaHallDto>(cinemaHall)),
 			error => result.ToActionResult()
 		);
 	}

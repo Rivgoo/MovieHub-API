@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Application.CinemaHalls.Dtos;
+using AutoMapper;
 using Domain.Entities;
 using Web.API.Controllers.V1.CinemaHalls.Request;
 
@@ -10,5 +11,6 @@ public class CinemaHallProfile : Profile
 	{
 		CreateMap<CreateCinemaHallRequest, CinemaHall>();
 		CreateMap<UpdateCinemaHallRequest, CinemaHall>();
+		CreateMap<CinemaHall, CinemaHallDto>();
 	}
 }
