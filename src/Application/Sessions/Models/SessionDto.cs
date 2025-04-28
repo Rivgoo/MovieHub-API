@@ -1,8 +1,8 @@
 ﻿using Domain.Enums;
 
-namespace Web.API.Controllers.V1.Sessions.Responses;
+namespace Application.Sessions.Models;
 
-public class SessionResponse
+public class SessionDto
 {
 	public int Id { get; set; }
 

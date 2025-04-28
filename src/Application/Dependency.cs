@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions.Services;
 using Application.Filters.Abstractions;
 using Application.Filters.Services;
+using Application.Sessions.Abstractions;
 using Application.Users;
 using Application.Users.Abstractions;
 using Microsoft.Extensions.DependencyInjection;

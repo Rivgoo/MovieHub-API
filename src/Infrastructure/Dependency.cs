@@ -3,6 +3,8 @@ using Application.Abstractions.Repositories;
 using Application.Contents;
 using Application.Files.Abstractions;
 using Application.Filters.Abstractions;
+using Application.Sessions;
+using Application.Sessions.Abstractions;
 using Domain.Entities;
 using Infrastructure.Core;
 using Infrastructure.Files;
@@ -110,6 +112,9 @@ public static class Dependency
 
 		#region Filters
 		services.AddScoped<ISorter<Content, ContentFilter>, ContentSorter>();
+		services.AddScoped<ISorter<Session, SessionFilter>, SessionSorter>();
+
+		services.AddScoped<ISessionSelector, SessionSelector>();
 		#endregion
 
 		return services;

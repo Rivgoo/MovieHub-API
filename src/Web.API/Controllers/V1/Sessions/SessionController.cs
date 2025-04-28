@@ -6,10 +6,13 @@ using Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.API.Controllers.V1.Sessions.Requests;
-using Web.API.Controllers.V1.Sessions.Responses;
 using Web.API.Core.BaseResponses;
 using Web.API.Core;
 using Application.Results;
+using Application.Filters.Abstractions;
+using Application.Filters;
+using Application.Sessions;
+using Application.Sessions.Models;
 
 namespace Web.API.Controllers.V1.Sessions;
 
@@ -20,9 +23,58 @@ namespace Web.API.Controllers.V1.Sessions;
 /// <param name="entityService">The service for managing Session entities (<see cref="ISessionService"/>).</param>
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/sessions")]
-public class SessionController(IMapper mapper, ISessionService entityService) :
+public class SessionController(
+	IMapper mapper, 
+	ISessionService entityService,
+	IFilterService<Session, SessionFilter> filterService) :
 	EntityApiController<ISessionService>(mapper, entityService)
 {
+	private readonly IFilterService<Session, SessionFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves session items based on filter, pagination, and ordering criteria.
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "StartTime", "TicketPrice").</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object.</param>
+	/// <response code="200">Returns the paginated list of session items.</response>
+	/// <response code="400">Returns an error if the input (page size, ordering, filter) is invalid.</response>
+	[AllowAnonymous]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<SessionDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] SessionFilter filter)
+	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["StartTime"];
+			orderType = [QueryableOrderType.OrderBy];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _filterService
+			.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<SessionDto, ISessionSelector>();
+
+		return filterResult.ToActionResult();
+	}
+
 	/// <summary>
 	/// Checks if a Session entity with the specified ID exists.
 	/// </summary>
@@ -57,14 +109,12 @@ public class SessionController(IMapper mapper, ISessionService entityService) :
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<SessionResponse>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(IEnumerable<SessionDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
 	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
 	{
-		var sessions = await _entityService.GetAllAsync(cancellationToken);
-
-		return Ok(_mapper.Map<IEnumerable<SessionResponse>>(sessions));
+		return Ok(await _entityService.GetAllAsync(cancellationToken));
 	}
 
 	/// <summary>
@@ -84,7 +134,7 @@ public class SessionController(IMapper mapper, ISessionService entityService) :
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[AllowAnonymous]
 	[HttpGet("{id}")]
-	[ProducesResponseType(typeof(SessionResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(SessionDto), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -93,7 +143,7 @@ public class SessionController(IMapper mapper, ISessionService entityService) :
 		var result = await _entityService.GetByIdAsync(id, cancellationToken);
 
 		return result.Match(
-			session => Ok(_mapper.Map<SessionResponse>(session)),
+			session => Ok(_mapper.Map<SessionDto>(session)),
 			error => result.ToActionResult()
 		);
 	}

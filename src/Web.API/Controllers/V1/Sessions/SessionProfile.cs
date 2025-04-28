@@ -1,7 +1,7 @@
-﻿using AutoMapper;
+﻿using Application.Sessions.Models;
+using AutoMapper;
 using Domain.Entities;
 using Web.API.Controllers.V1.Sessions.Requests;
-using Web.API.Controllers.V1.Sessions.Responses;
 
 namespace Web.API.Controllers.V1.Sessions;
 
@@ -12,6 +12,6 @@ public class SessionProfile : Profile
 		CreateMap<CreateSessionRequest, Session>();
 		CreateMap<UpdateSessionRequest, Session>();
 
-		CreateMap<Session, SessionResponse>();
+		CreateMap<Session, SessionDto>();
 	}
 }
