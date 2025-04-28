@@ -52,30 +52,6 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 		=> Ok(new ExistsResponse(await _entityService.ExistsByIdAsync(id, cancellationToken)));
 
 	/// <summary>
-	/// Retrieves a list of all Actor entities.
-	/// </summary>
-	/// <summary>
-	/// Returns a collection of all available actors.
-	/// Requires authentication.
-	/// </summary>
-	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-	/// <returns>An IActionResult containing the list of actors.</returns>
-	/// <response code="200">Returns a list of <c>Actor</c> entities.</response>
-	/// <response code="401">If the request does not contain a valid authentication token.</response>
-	/// <response code="403">If the authenticated user does not have the required authorization.</response>
-	[Authorize(Roles = RoleList.Admin)]
-	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<ActorResponse>), StatusCodes.Status200OK)]
-	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-	[ProducesResponseType(StatusCodes.Status403Forbidden)]
-	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
-	{
-		var actors = await _entityService.GetAllAsync(cancellationToken);
-
-		return Ok(_mapper.Map<IEnumerable<ActorResponse>>(actors));
-	}
-
-	/// <summary>
 	/// Retrieves a specific Actor entity by its unique identifier.
 	/// </summary>
 	/// <summary>
@@ -101,7 +77,11 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 		var result = await _entityService.GetByIdAsync(id, cancellationToken);
 
 		return result.Match(
-			actor => Ok(_mapper.Map<ActorResponse>(actor)),
+			actor => {
+				var response = _mapper.Map<ActorResponse>(actor);
+				response.PhotoUrl = CreateFullPhotoUrl(response.PhotoUrl);
+				return Ok(response);
+			},
 			error => result.ToActionResult()
 		);
 	}
@@ -135,7 +115,7 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 		var result = await _entityService.CreateAsync(actorToCreate);
 
 		return result.Match(
-			_ => Ok(new CreatedResponse<int>(result.Value.Id)),
+			_ => Ok(new CreatedResponse<int>(result.Value!.Id)),
 			error => result.ToActionResult()
 		);
 	}
@@ -205,5 +185,76 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 			Ok,
 			error => result.ToActionResult()
 		);
+	}
+
+	/// <summary>
+	/// Uploads or updates the photo for a specific Actor entity.
+	/// </summary>
+	/// <param name="id">The ID of the Actor entity for which to upload the photo.</param>
+	/// <param name="request">The request containing the Base64 encoded image string.</param>
+	/// <response code="200">Returns the URL of the uploaded photo.</response>
+	/// <response code="400">Returns an Error object for invalid Base64 string or unsupported image format.</response>
+	/// <response code="404">Returns an Error object if the Actor entity is not found.</response>
+	/// <response code="500">Returns an Error object if a failure occurred during file saving.</response>
+	/// <response code="401">If the user is unauthorized.</response>
+	/// <response code="403">If the user is not an Admin.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpPost("{id}/photo")]
+	[ProducesResponseType(typeof(UploadActorPhotoResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> UploadPhoto(int id, [FromBody] UploadActorPhotoRequest request)
+	{
+		var result = await _entityService.SavePhotoAsync(id, request.Base64Image);
+
+		return result.Match(
+			actor => Ok(new UploadActorPhotoResponse(CreateFullPhotoUrl(actor.PhotoUrl)!)),
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Deletes the photo for a specific Actor entity.
+	/// </summary>
+	/// <param name="id">The ID of the Actor entity for which to delete the photo.</param>
+	/// <response code="200">Indicates successful deletion.</response>
+	/// <response code="404">Returns an Error object if the Actor entity is not found.</response>
+	/// <response code="500">Returns an Error object if a failure occurred during file deletion.</response>
+	/// <response code="401">If the user is unauthorized.</response>
+	/// <response code="403">If the user is not an Admin.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpDelete("{id}/photo")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> DeletePhoto(int id)
+	{
+		var result = await _entityService.DeletePhotoAsync(id);
+
+		return result.Match(
+			Ok,
+			error => result.ToActionResult()
+		);
+	}
+
+	private string? CreateFullPhotoUrl(string? relativePath)
+	{
+		if (string.IsNullOrWhiteSpace(relativePath))
+			return null;
+
+		if (HttpContext == null)
+			return relativePath;
+
+		var request = HttpContext.Request;
+		var baseUrl = $"{request.Scheme}://{request.Host}";
+		var path = relativePath.StartsWith('/') ? relativePath : $"/{relativePath}";
+
+		return $"{baseUrl}{path}";
 	}
 }
