@@ -10,16 +10,15 @@ using Web.API.Controllers.V1.Actors.Responses;
 using Web.API.Core.BaseResponses;
 using Web.API.Core;
 using Application.Results;
+using Application.Actors;
+using Application.Filters.Abstractions;
+using Application.Actors.Dtos;
+using Application.Filters;
 
 namespace Web.API.Controllers.V1.Actors;
 
 /// <summary>
 /// API Controller for managing Actor entities.
-/// </summary>
-/// <summary>
-/// This controller provides endpoints for standard CRUD operations on Actor entities,
-/// as well as a specific endpoint to check for entity existence by ID.
-/// It uses AutoMapper for request/entity mapping and relies on IActorService for data operations.
 /// </summary>
 /// <summary>
 /// Initializes a new instance of the <see cref="ActorController"/> class.
@@ -28,9 +27,62 @@ namespace Web.API.Controllers.V1.Actors;
 /// <param name="entityService">The service for managing Actor entities (<see cref="IActorService"/>).</param>
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/actors")]
-public class ActorController(IMapper mapper, IActorService entityService) :
+public class ActorController(
+	IMapper mapper, 
+	IActorService entityService,
+	IFilterService<Actor, ActorFilter> filterService) :
 	EntityApiController<IActorService>(mapper, entityService)
 {
+	private readonly IFilterService<Actor, ActorFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves actor items based on filter, pagination, and ordering criteria.
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "FirstName", "LastName").</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object.</param>
+	/// <response code="200">Returns the paginated list of actor items.</response>
+	/// <response code="400">Returns an error if the input (page size, ordering, filter) is invalid.</response>
+	[AllowAnonymous]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<ActorDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] ActorFilter filter)
+	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["LastName", "FirstName"];
+			orderType = [QueryableOrderType.OrderBy, QueryableOrderType.ThenBy];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _filterService.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<ActorDto, IActorSelector>();
+
+		if (filterResult.IsSuccess)
+			foreach (var actor in filterResult.Value!.Items)
+				actor.PhotoUrl = CreateFullPhotoUrl(actor.PhotoUrl);
+
+		return filterResult.ToActionResult();
+	}
+
+
 	/// <summary>
 	/// Checks if a Actor entity with the specified ID exists.
 	/// </summary>
@@ -68,7 +120,7 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
 	[AllowAnonymous]
 	[HttpGet("{id}")]
-	[ProducesResponseType(typeof(ActorResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ActorDto), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -78,7 +130,7 @@ public class ActorController(IMapper mapper, IActorService entityService) :
 
 		return result.Match(
 			actor => {
-				var response = _mapper.Map<ActorResponse>(actor);
+				var response = _mapper.Map<ActorDto>(actor);
 				response.PhotoUrl = CreateFullPhotoUrl(response.PhotoUrl);
 				return Ok(response);
 			},
