@@ -21,11 +21,11 @@ public class Booking : BaseEntity<int>, IBaseEntity<int>
 	[Required]
 	public int SessionId { get; set; }
 
-	/// <summary>
-	/// Gets or sets the seat ID associated with the booking.
-	/// </summary>
 	[Required]
-	public int SeatId { get; set; }
+	public int RowNumber { get; set; }
+
+	[Required]
+	public int SeatNumber { get; set; }
 
 	/// <summary>
 	/// Gets or sets the status of the booking.
