@@ -14,7 +14,7 @@ namespace Web.API.Controllers.V1.Utils;
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/utils/seed")]
 [ApiController]
-public class SeedController : ApiController 
+public class SeedController : ApiController
 {
 	private readonly ISeedService _seedService;
 	private readonly IConfiguration _configuration;
@@ -68,14 +68,9 @@ public class SeedController : ApiController
 	{
 		bool seedEnabledByConfig = _configuration.GetValue<bool>("FakeDataSeed:Enabled", false);
 
-		if (!seedEnabledByConfig && !_environment.IsDevelopment())
+		if (!seedEnabledByConfig)
 		{
-			_logger.LogWarning("Database seeding attempt blocked: Not in Development environment and 'FakeDataSeed:Enabled' is not true.");
-			return Result.Bad(Error.AccessForbidden("Seed.NotAllowed", "Database seeding is only allowed in Development environment or when explicitly enabled.")).ToActionResult();
-		}
-		if (!seedEnabledByConfig && _environment.IsDevelopment())
-		{
-			_logger.LogWarning("Database seeding is disabled via 'FakeDataSeed:Enabled=false', even in Development.");
+			_logger.LogWarning("Database seeding is disabled via 'FakeDataSeed:Enabled=false'.");
 			return Result.Bad(Error.BadRequest("Seed.Disabled", "Database seeding is disabled via configuration.")).ToActionResult();
 		}
 
