@@ -107,4 +107,14 @@ public class ContentFilter : BaseFilter<Content>
 	/// null: ignore this filter.
 	/// </summary>
 	public bool? HasSessions { get; set; }
+
+	/// <summary>
+	/// Filter content that has at least one session starting on or after this date/time.
+	/// </summary>
+	public DateTime? MinSessionStartTime { get; set; }
+
+	/// <summary>
+	/// Filter content that has at least one session starting on or before this date/time.
+	/// </summary>
+	public DateTime? MaxSessionStartTime { get; set; }
 }

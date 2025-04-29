@@ -74,7 +74,9 @@ public class ContentController(
 				return result.ToActionResult();
 		}
 
-		return (await _filterService.SetPageSize(pageSize)
+		return (await _filterService
+			.SplitQuery()
+			.SetPageSize(pageSize)
 			.AddFilter(filter)
 			.ApplyAsync(x => new ContentDto
 			{
