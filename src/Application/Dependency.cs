@@ -1,6 +1,8 @@
 ﻿using Application.Abstractions.Services;
 using Application.Filters.Abstractions;
 using Application.Filters.Services;
+using Application.Seeds;
+using Application.Seeds.Abstractions;
 using Application.Sessions.Abstractions;
 using Application.Users;
 using Application.Users.Abstractions;
@@ -12,7 +14,7 @@ public static class Dependency
 {
 	public static IServiceCollection AddApplicationServices(this IServiceCollection services)
 	{
-		#region Services
+		#region Auto Services discovery
 		var applicationAssembly = typeof(Dependency).Assembly;
 
 		var serviceTypes = applicationAssembly.GetTypes()
@@ -36,6 +38,8 @@ public static class Dependency
 		#endregion
 
 		services.AddScoped(typeof(IFilterService<,>), typeof(FilterService<,>));
+
+		services.AddScoped<ISeedService, SeedService>();
 
 		return services;
 	}
