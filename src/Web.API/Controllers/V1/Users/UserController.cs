@@ -8,6 +8,7 @@ using Application.Users.Abstractions;
 using Application.Users.Models;
 using Application.Results;
 using Domain;
+using System.Security.Claims;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -34,12 +35,13 @@ public class UserController(
 	/// <returns>An <see cref="IActionResult"/> representing the response indicating whether the User entity exists.</returns>
 	/// <response code="200">Returns <see cref="ExistsResponse"/> with <see langword="true"/> if the entity exists, or <see langword="false"/> otherwise.</response>
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
+	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet("{id}/exists")]
 	[ProducesResponseType(typeof(ExistsResponse), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	public async Task<IActionResult> ExistsById(string id)
 		=> Ok(new ExistsResponse(await _entityService.ExistsByIdAsync(id)));
-	
+
 	/// <summary>
 	/// Retrieves basic information for a specific user by their ID.
 	/// </summary>
@@ -47,12 +49,33 @@ public class UserController(
 	/// <response code="200">Returns the user's basic information.</response>
 	/// <response code="404">If a user with the specified ID is not found.</response>
 	/// <response code="401">If the client is not authorized to perform this action.</response>
+	[Authorize(Roles = RoleList.Admin)]
 	[HttpGet("{id}/info")]
 	[ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	public async Task<IActionResult> GetInfoById(string id)
 		=> (await _entityService.GetUserInfoByIdAsync(id)).ToActionResult();
+
+	/// <summary>
+	/// Retrieves the basic information of the currently authenticated user.
+	/// </summary>
+	/// <response code="200">Returns the user's basic information.</response>
+	/// <response code="404">If a user is not found.</response>
+	/// <response code="401">If the client is not authorized to perform this action.</response>
+	[HttpGet("/info")]
+	[ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> GetInfoByToken()
+	{
+		var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+		if (string.IsNullOrEmpty(id))
+			return Unauthorized(Error.AccessForbidden("User.NotFound", "User not found"));
+
+		return (await _entityService.GetUserInfoByIdAsync(id)).ToActionResult();
+	}
 
 	/// <summary>
 	/// Registers a new user with the 'Admin' role.
