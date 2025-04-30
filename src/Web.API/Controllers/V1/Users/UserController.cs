@@ -63,7 +63,7 @@ public class UserController(
 	/// <response code="200">Returns the user's basic information.</response>
 	/// <response code="404">If a user is not found.</response>
 	/// <response code="401">If the client is not authorized to perform this action.</response>
-	[HttpGet("/info")]
+	[HttpGet("my-info")]
 	[ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
