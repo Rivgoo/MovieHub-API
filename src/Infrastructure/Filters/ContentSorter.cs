@@ -82,7 +82,7 @@ internal class ContentSorter(CoreDbContext dbContext)
 		if (filter.HasSessions.HasValue)
 			if (filter.HasSessions.Value)
 			{
-				query = query.And(c => c.Sessions.Any());
+				query = query.And(c => c.Sessions.Any(s => s.StartTime > DateTime.UtcNow));
 
 				if (filter.MinSessionStartTime.HasValue)
 					query = query.And(c => c.Sessions.Any(s => s.StartTime >= filter.MinSessionStartTime.Value));
