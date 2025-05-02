@@ -5,7 +5,7 @@ using Infrastructure.Core;
 using Infrastructure.Filters.Abstractions;
 using LinqKit;
 
-namespace Infrastructure.Filters;
+namespace Infrastructure.Filters.Sorters;
 
 internal class BookingSorter(CoreDbContext dbContext)
 	: BaseSorter<Booking, BookingFilter>(dbContext), ISorter<Booking, BookingFilter>

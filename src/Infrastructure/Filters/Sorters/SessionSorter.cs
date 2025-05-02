@@ -6,7 +6,7 @@ using Infrastructure.Filters.Abstractions;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Filters;
+namespace Infrastructure.Filters.Sorters;
 
 internal class SessionSorter(CoreDbContext dbContext)
 	: BaseSorter<Session, SessionFilter>(dbContext), ISorter<Session, SessionFilter>
