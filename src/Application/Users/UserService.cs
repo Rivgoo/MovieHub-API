@@ -97,6 +97,8 @@ internal class UserService(
 			result.User = new(user.Id, role);
 			result.Succeeded = true;
 
+			await _entityRepository.UpdateLastLoginDateAsync(user.Id, DateTime.UtcNow);
+
 			return result;
 		}
 

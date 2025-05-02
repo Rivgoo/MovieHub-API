@@ -9,6 +9,11 @@ using Application.Users.Models;
 using Application.Results;
 using Domain;
 using System.Security.Claims;
+using Application.Filters.Abstractions;
+using Application.Users;
+using Domain.Entities;
+using Application.Filters;
+using Application.Users.Dtos;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -23,10 +28,59 @@ namespace Web.API.Controllers.V1.Users;
 public class UserController(
 	IMapper mapper,
 	IUserService entityService,
-	IUserRegistrator userRegistrator) :
+	IUserRegistrator userRegistrator,
+	IFilterService<User, UserFilter> filterService) :
 	EntityApiController<IUserService>(mapper, entityService)
 {
 	private readonly IUserRegistrator _userRegistrator = userRegistrator;
+	private readonly IFilterService<User, UserFilter> _filterService = filterService;
+
+	/// <summary>
+	/// Retrieves user items based on filter, pagination, and ordering criteria. (Admin only)
+	/// </summary>
+	/// <param name="pageSize">The number of items to return per page.</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "Email", "LastName", "CreatedAt").</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="filter">The filter criteria object.</param>
+	/// <response code="200">Returns the paginated list of user DTOs, including their roles.</response>
+	/// <response code="400">Returns an error if the input is invalid.</response>
+	/// <response code="401">If the user is unauthorized.</response>
+	/// <response code="403">If the user is not an Admin.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpGet("filter")]
+	[ProducesResponseType(typeof(PaginatedList<UserDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> ByFilter(int pageSize,
+		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] UserFilter filter)
+	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["Email"];
+			orderType = [QueryableOrderType.OrderBy];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _filterService.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<UserDto, IUserSelector>();
+
+		return filterResult.ToActionResult();
+	}
 
 	/// <summary>
 	/// Checks if a User entity with the specified ID exists.

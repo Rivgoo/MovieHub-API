@@ -12,10 +12,14 @@ using Application.Files.Abstractions;
 using Application.Filters.Abstractions;
 using Application.Sessions;
 using Application.Sessions.Abstractions;
+using Application.Users;
+using Application.Users.Abstractions;
 using Domain.Entities;
 using Infrastructure.Core;
 using Infrastructure.Files;
 using Infrastructure.Filters;
+using Infrastructure.Filters.Selectors;
+using Infrastructure.Filters.Sorters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -123,11 +127,13 @@ public static class Dependency
 		services.AddScoped<ISorter<Actor, ActorFilter>, ActorSorter>();
 		services.AddScoped<ISorter<CinemaHall, CinemaHallFilter>, CinemaHallSorter>();
 		services.AddScoped<ISorter<Booking, BookingFilter>, BookingSorter>();
+		services.AddScoped<ISorter<User, UserFilter>, UserSorter>();
 
 		services.AddScoped<ISessionSelector, SessionSelector>();
 		services.AddScoped<IActorSelector, ActorSelector>();
 		services.AddScoped<ICinemaHallSelector, CinemaHallSelector>();
 		services.AddScoped<IBookingSelector, BookingSelector>();
+		services.AddScoped<IUserSelector, UserSelector>();
 		#endregion
 
 		return services;
