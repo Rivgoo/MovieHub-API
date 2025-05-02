@@ -57,6 +57,11 @@ internal class ContentSorter(CoreDbContext dbContext)
 			else
 				query = query.And(c => string.IsNullOrEmpty(c.PosterUrl));
 
+		if (filter.HasBanner.HasValue)
+			query = query.And(filter.HasBanner.Value
+				? c => !string.IsNullOrEmpty(c.BannerUrl)
+				: c => string.IsNullOrEmpty(c.BannerUrl));
+
 		if (filter.GenreIds.Count > 0)
 			if (filter.MatchAllGenres)
 				query = query.And(c => filter.GenreIds.All(gid => c.ContentGenres.Any(cg => cg.GenreId == gid)));

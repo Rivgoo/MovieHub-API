@@ -102,7 +102,12 @@ internal class SeedService(
 				if (uploadImages)
 				{
 					var posterResult = await _contentService.SavePosterAsync(createdContent.Id, _placeholderBase64Image);
-					if (posterResult.IsFailure) _logger.LogWarning("[Content {ContentId}] Failed to save poster: {Error}", createdContent.Id, posterResult.Error);
+					if (posterResult.IsFailure) 
+						_logger.LogWarning("[Content {ContentId}] Failed to save poster: {Error}", createdContent.Id, posterResult.Error);
+
+					var bannerResult = await _contentService.SaveBannerAsync(createdContent.Id, _placeholderBase64Image);
+					if (bannerResult.IsFailure) 
+						_logger.LogWarning("[Content {ContentId}] Failed to save banner: {Error}", createdContent.Id, bannerResult.Error);
 				}
 
 				await LinkGenresAsync(createdContent, genres, cancellationToken);
@@ -245,7 +250,7 @@ internal class SeedService(
 			_logger.LogInformation("Uploading placeholder photos for Actors...");
 			foreach (var actor in actors.Where(a => string.IsNullOrEmpty(a.PhotoUrl)))
 			{
-				if (cancellationToken.IsCancellationRequested) 
+				if (cancellationToken.IsCancellationRequested)
 					break;
 				var photoResult = await _actorService.SavePhotoAsync(actor.Id, _placeholderBase64Image);
 
@@ -305,14 +310,14 @@ internal class SeedService(
 		if (allGenres.Count == 0) return;
 
 		var genresToLink = _faker.PickRandom(allGenres, _faker.Random.Int(1, Math.Min(4, allGenres.Count))).ToList();
-		
+
 		foreach (var genre in genresToLink)
 		{
 			if (cancellationToken.IsCancellationRequested)
 				break;
 
 			var linkResult = await _contentGenreService.CreateAsync(new ContentGenre { ContentId = content.Id, GenreId = genre.Id });
-			
+
 			if (linkResult.IsFailure && !linkResult.Error!.Code.EndsWith("AlreadyExists"))
 				_logger.LogWarning("[Content {ContentId}] Failed to link Genre {GenreId}: {Error}", content.Id, genre.Id, linkResult.Error);
 		}
@@ -326,12 +331,12 @@ internal class SeedService(
 
 		foreach (var actor in actorsToLink)
 		{
-			if (cancellationToken.IsCancellationRequested) 
+			if (cancellationToken.IsCancellationRequested)
 				break;
 
 			var roleName = _faker.Name.JobTitle();
 			var linkResult = await _contentActorService.CreateAsync(new ContentActor { ContentId = content.Id, ActorId = actor.Id, RoleName = roleName });
-			
+
 			if (linkResult.IsFailure && !linkResult.Error.Code.EndsWith("AlreadyExists"))
 				_logger.LogWarning("[Content {ContentId}] Failed to link Actor {ActorId}: {Error}", content.Id, actor.Id, linkResult.Error);
 		}

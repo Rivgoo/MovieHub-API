@@ -33,6 +33,11 @@ public class ContentDto
 	public string? TrailerUrl { get; set; }
 
 	/// <summary>
+	/// Gets or sets the URL of the content's banner image.
+	/// </summary>
+	public string? BannerUrl { get; set; }
+
+	/// <summary>
 	/// Gets or sets the URL of the content's poster image.
 	/// </summary>
 	public string? PosterUrl { get; set; }

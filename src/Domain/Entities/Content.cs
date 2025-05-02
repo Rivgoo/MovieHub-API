@@ -44,6 +44,11 @@ public class Content : BaseEntity<int>, IBaseEntity<int>
 
 	[MaxLength(512)]
 	public string? PosterUrl { get; set; }
+	[MaxLength(512)]
+	/// <summary>
+	/// Gets or sets the URL of the content's banner image.
+	/// </summary>
+	public string? BannerUrl { get; set; }
 
 	/// <summary>
 	/// Gets or sets the duration of the content in minutes.

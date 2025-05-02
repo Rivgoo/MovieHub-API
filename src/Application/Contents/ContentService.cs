@@ -3,6 +3,7 @@ using Application.Abstractions.Services;
 using Application.Contents.Abstractions.Repositories;
 using Application.Contents.Abstractions.Services;
 using Application.Contents.Dtos;
+using Application.Files;
 using Application.Files.Abstractions;
 using Application.Results;
 using Application.Utilities;
@@ -66,7 +67,7 @@ internal class ContentService(
 		var saveResult = await _fileStorageService.SaveBase64ImageAsync(
 			base64String,
 			contentPosterPath,
-			contentId.ToString());
+			$"{contentId}_poster");
 
 		if (saveResult.IsFailure)
 			return Result<Content>.Bad(saveResult.Error);
@@ -103,6 +104,68 @@ internal class ContentService(
 		return Result.Bad(deleteResult.Error!);
 	}
 
+	public async Task<Result<Content>> SaveBannerAsync(int contentId, string base64String)
+	{
+		var contentResult = await GetByIdAsync(contentId);
+		if (contentResult.IsFailure)
+			return contentResult;
+
+		var content = contentResult.Value!;
+
+		if (!string.IsNullOrWhiteSpace(content.BannerUrl))
+		{
+			var deleteResult = await _fileStorageService.DeleteFileAsync(content.BannerUrl);
+			if (deleteResult.IsFailure)
+			{
+				_logger.LogWarning("Failed to delete old banner file for content {ContentId} at {BannerUrl}. Error: {Error}", contentId, content.BannerUrl, deleteResult.Error.Description);
+				return Result<Content>.Bad(deleteResult.Error);
+			}
+			content.BannerUrl = null;
+		}
+
+		var contentBannerPath = _configuration.GetValue<string>("ContentBannerPath");
+
+		if (string.IsNullOrWhiteSpace(contentBannerPath))
+			return Result<Content>.Bad(FileErrors.InvalidDirectoryName("Content banner path is not configured."));
+
+		var saveResult = await _fileStorageService.SaveBase64ImageAsync(
+			base64String,
+			contentBannerPath,
+			$"{contentId}_banner");
+
+		if (saveResult.IsFailure)
+			return Result<Content>.Bad(saveResult.Error);
+
+		content.BannerUrl = saveResult.Value;
+		_entityRepository.Update(content);
+		await _unitOfWork.SaveChangesAsync();
+
+		return Result<Content>.Ok(content);
+	}
+	public async Task<Result> DeleteBannerAsync(int contentId)
+	{
+		var contentResult = await GetByIdAsync(contentId);
+		if (contentResult.IsFailure)
+			return Result.Ok();
+
+		var content = contentResult.Value!;
+		if (string.IsNullOrWhiteSpace(content.BannerUrl))
+			return Result.Ok();
+
+		var deleteResult = await _fileStorageService.DeleteFileAsync(content.BannerUrl);
+
+		if (deleteResult.IsSuccess)
+		{
+			content.BannerUrl = null;
+			_entityRepository.Update(content);
+			await _unitOfWork.SaveChangesAsync();
+			return Result.Ok();
+		}
+
+		_logger.LogError("Failed to delete banner file for content {ContentId} at {BannerUrl}. Error: {Error}", contentId, content.BannerUrl, deleteResult.Error?.Description);
+		return Result.Bad(deleteResult.Error ?? FileErrors.DeleteError("Unknown error deleting banner file."));
+	}
+
 	public override async Task<Result> DeleteAsync(Content entity)
 	{
 		if (!string.IsNullOrEmpty(entity.PosterUrl))
@@ -111,6 +174,14 @@ internal class ContentService(
 
 			if (posterDeletedResult.IsFailure)
 				return Result.Bad(posterDeletedResult.Error!);
+		}
+
+		if (!string.IsNullOrEmpty(entity.BannerUrl))
+		{
+			var bannerDeletedResult = await _fileStorageService.DeleteFileAsync(entity.BannerUrl);
+
+			if (bannerDeletedResult.IsFailure)
+				return Result.Bad(bannerDeletedResult.Error!);
 		}
 
 		return await base.DeleteAsync(entity);
@@ -127,10 +198,10 @@ internal class ContentService(
 			return Result.Bad(EntityErrors<Content, int>.StringTooLong(nameof(entity.Title), 512));
 
 		if (Guard.MinLength(entity.Description, 1))
-			return Result.Bad(EntityErrors<Content, int>.StringTooShort(nameof(entity.Title), 1));
+			return Result.Bad(EntityErrors<Content, int>.StringTooShort(nameof(entity.Description), 1));
 
-		if (Guard.MaxLength(entity.Description, 512))
-			return Result.Bad(EntityErrors<Content, int>.StringTooLong(nameof(entity.Title), 16384));
+		if (Guard.MaxLength(entity.Description, 16384))
+			return Result.Bad(EntityErrors<Content, int>.StringTooLong(nameof(entity.Description), 16384));
 
 		if (entity.Rating != null && (Guard.Min(entity.Rating.Value, 0) || Guard.Max(entity.Rating.Value, 100)))
 			return Result.Bad(ContentErrors.InvalidRating);

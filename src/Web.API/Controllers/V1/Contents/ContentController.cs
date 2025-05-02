@@ -22,7 +22,6 @@ namespace Web.API.Controllers.V1.Contents;
 /// </summary>
 /// <param name="mapper">The AutoMapper instance for object mapping.</param>
 /// <param name="entityService">The service for managing Content entities (<see cref="IContentService"/>).</param>
-/// <param name="configuration">Configuration settings for the application.</param>
 /// <param name="contentActorService"> The service for managing ContentActor entities (<see cref="IContentActorService"/>).</param>
 /// <param name="contentGenreService"> The service for managing ContentGenre entities (<see cref="IContentGenreService"/>).</param>
 [ApiVersion("1")]
@@ -84,6 +83,7 @@ public class ContentController(
 				ReleaseYear = x.ReleaseYear,
 				Description = x.Description,
 				PosterUrl = x.PosterUrl,
+				BannerUrl = x.BannerUrl,
 				TrailerUrl = x.TrailerUrl,
 				DurationMinutes = x.DurationMinutes,
 				CreatedAt = x.CreatedAt,
@@ -96,7 +96,10 @@ public class ContentController(
 			return contents.ToActionResult();
 
 		foreach (var item in contents.Value.Items)
-			item.PosterUrl = CreateFullPosterUrl(item.PosterUrl);
+		{
+			item.PosterUrl = CreateFullImageUrl(item.PosterUrl);
+			item.BannerUrl = CreateFullImageUrl(item.BannerUrl);
+		}
 
 		return contents.ToActionResult();
 	}
@@ -126,7 +129,7 @@ public class ContentController(
 		var contentItems = await _entityService.GetAllContentDtosAsync(cancellationToken);
 
 		foreach (var item in contentItems)
-			item.PosterUrl = CreateFullPosterUrl(item.PosterUrl);
+			item.PosterUrl = CreateFullImageUrl(item.PosterUrl);
 
 		return Ok(contentItems);
 	}
@@ -148,7 +151,7 @@ public class ContentController(
 
 		var content = result.Value;
 
-		content!.PosterUrl = CreateFullPosterUrl(content.PosterUrl);
+		content!.PosterUrl = CreateFullImageUrl(content.PosterUrl);
 
 		return result.Match(
 			_ => Ok(content),
@@ -302,7 +305,7 @@ public class ContentController(
 		var result = await _entityService.SavePosterAsync(id, base64String);
 
 		return result.Match(
-			_ => Ok(new UploadPosterResponse(CreateFullPosterUrl(result.Value.PosterUrl))),
+			_ => Ok(new UploadPosterResponse(CreateFullImageUrl(result.Value.PosterUrl))),
 			error => result.ToActionResult()
 		);
 	}
@@ -333,6 +336,61 @@ public class ContentController(
 	public async Task<IActionResult> DeletePoster(int id, CancellationToken cancellationToken)
 	{
 		var result = await _entityService.DeletePosterAsync(id);
+
+		return result.Match(
+			Ok,
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Uploads or updates the banner image for a specific Content entity.
+	/// </summary>
+	/// <param name="id">The ID of the Content entity.</param>
+	/// <param name="request">The request containing the Base64 encoded banner image.</param>
+	/// <response code="200">Returns the URL of the uploaded banner.</response>
+	/// <response code="400">Invalid Base64 or unsupported format.</response>
+	/// <response code="404">Content entity not found.</response>
+	/// <response code="500">File saving failure.</response>
+	/// <response code="401">Unauthorized.</response>
+	/// <response code="403">Forbidden (Admin role required).</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpPost("{id}/banner")]
+	[ProducesResponseType(typeof(UploadBannerResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> UploadBanner(int id, [FromBody] UploadBannerRequest request)
+	{
+		var result = await _entityService.SaveBannerAsync(id, request.Base64Image);
+
+		return result.Match(
+			content => Ok(new UploadBannerResponse(CreateFullImageUrl(content.BannerUrl)!)),
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Deletes the banner image for a specific Content entity.
+	/// </summary>
+	/// <param name="id">The ID of the Content entity.</param>
+	/// <response code="200">Successful deletion.</response>
+	/// <response code="404">Content entity not found.</response>
+	/// <response code="500">File deletion failure.</response>
+	/// <response code="401">Unauthorized.</response>
+	/// <response code="403">Forbidden (Admin role required).</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpDelete("{id}/banner")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> DeleteBanner(int id)
+	{
+		var result = await _entityService.DeleteBannerAsync(id);
 
 		return result.Match(
 			Ok,
@@ -471,7 +529,7 @@ public class ContentController(
 		return result.ToActionResult();
 	}
 
-	private string? CreateFullPosterUrl(string? relativePath)
+	private string? CreateFullImageUrl(string? relativePath)
 	{
 		if (string.IsNullOrWhiteSpace(relativePath))
 			return null;

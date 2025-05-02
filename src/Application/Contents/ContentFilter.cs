@@ -62,6 +62,14 @@ public class ContentFilter : BaseFilter<Content>
 	public bool? HasPoster { get; set; }
 
 	/// <summary>
+	/// Gets or sets a flag to filter content based on the presence of a BannerUrl.
+	/// true: only content with a BannerUrl.
+	/// false: only content without a BannerUrl.
+	/// null: ignore this filter.
+	/// </summary>
+	public bool? HasBanner { get; set; }
+
+	/// <summary>
 	/// Gets or sets a list of Genre IDs. Content must belong to at least one (or all, see MatchAllGenres) of these genres.
 	/// </summary>
 	public List<int> GenreIds { get; set; } = [];
