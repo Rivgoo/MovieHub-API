@@ -124,12 +124,14 @@ public static class Dependency
 		#region Filters
 		services.AddScoped<ISorter<Content, ContentFilter>, ContentSorter>();
 		services.AddScoped<ISorter<Session, SessionFilter>, SessionSorter>();
+		services.AddScoped<ISorter<Session, SessionContentFilter>, SessionContentSorter>();
 		services.AddScoped<ISorter<Actor, ActorFilter>, ActorSorter>();
 		services.AddScoped<ISorter<CinemaHall, CinemaHallFilter>, CinemaHallSorter>();
 		services.AddScoped<ISorter<Booking, BookingFilter>, BookingSorter>();
 		services.AddScoped<ISorter<User, UserFilter>, UserSorter>();
 
 		services.AddScoped<ISessionSelector, SessionSelector>();
+		services.AddScoped<ISessionContentSelector, SessionContentSelector>();
 		services.AddScoped<IActorSelector, ActorSelector>();
 		services.AddScoped<ICinemaHallSelector, CinemaHallSelector>();
 		services.AddScoped<IBookingSelector, BookingSelector>();

@@ -13,6 +13,7 @@ using Application.Filters.Abstractions;
 using Application.Filters;
 using Application.Sessions;
 using Application.Sessions.Models;
+using Application.Sessions.Dtos;
 
 namespace Web.API.Controllers.V1.Sessions;
 
@@ -26,10 +27,12 @@ namespace Web.API.Controllers.V1.Sessions;
 public class SessionController(
 	IMapper mapper, 
 	ISessionService entityService,
-	IFilterService<Session, SessionFilter> filterService) :
+	IFilterService<Session, SessionFilter> filterService,
+	IFilterService<Session, SessionContentFilter> sessionContentfilterService) :
 	EntityApiController<ISessionService>(mapper, entityService)
 {
 	private readonly IFilterService<Session, SessionFilter> _filterService = filterService;
+	private readonly IFilterService<Session, SessionContentFilter> _sessionContentfilterService = sessionContentfilterService;
 
 	/// <summary>
 	/// Retrieves session items based on filter, pagination, and ordering criteria.
@@ -71,6 +74,60 @@ public class SessionController(
 			.SetPageSize(pageSize)
 			.AddFilter(filter)
 			.ApplyAsync<SessionDto, ISessionSelector>();
+
+		return filterResult.ToActionResult();
+	}
+
+	/// <summary>
+	/// Retrieves session items along with their associated content details, based on filtering, pagination, and ordering criteria.
+	/// </summary>
+	/// <remarks>
+	/// This endpoint allows anonymous access and returns a paginated list combining session information with details of the content being shown.
+	/// Default sort order is by StartTime ascending if no specific order is provided.
+	/// </remarks>
+	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
+	/// <param name="orderField">The field name(s) to order by (e.g., "StartTime", "TicketPrice", "Content.Title", "Content.ReleaseYear"). Provided via query string.</param>
+	/// <param name="orderType">The order type(s) corresponding to each orderField (e.g., OrderBy, ThenByDescending). Provided via query string.</param>
+	/// <param name="filter">The filter criteria object (SessionContentFilter) containing properties to filter sessions and their content. Provided via query string.</param>
+	/// <response code="200">Returns the paginated list of session items with associated content details.</response>
+	/// <response code="400">Returns an error if the input for pagination, ordering, or filtering is invalid.</response>
+	[AllowAnonymous]
+	[HttpGet("filter-with-content")]
+	[ProducesResponseType(typeof(PaginatedList<SessionContentDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> ByFilterWithContent(int pageSize,
+	[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] SessionContentFilter filter)
+	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["StartTime"];
+			orderType = [QueryableOrderType.OrderBy];
+		}
+
+		for (var i = 0; i < orderField.Length; i++)
+		{
+			var field = orderField[i];
+
+			if (orderType.Count <= i)
+				return Result.Bad(FilterErrors.InvalidOrderInput).ToActionResult();
+
+			var type = orderType[i];
+			var result = filter.AddOrdering(type, field);
+
+			if (result.IsFailure)
+				return result.ToActionResult();
+		}
+
+		var filterResult = await _sessionContentfilterService
+			.SetPageSize(pageSize)
+			.AddFilter(filter)
+			.ApplyAsync<SessionContentDto, ISessionContentSelector>();
+
+		foreach (var item in filterResult.Value!.Items)
+		{
+			item.PosterUrl = CreateFullImageUrl(item.PosterUrl);
+			item.BannerUrl = CreateFullImageUrl(item.BannerUrl);
+		}
 
 		return filterResult.ToActionResult();
 	}
@@ -251,5 +308,17 @@ public class SessionController(
 			Ok,
 			error => result.ToActionResult()
 		);
+	}
+
+	private string? CreateFullImageUrl(string? relativePath)
+	{
+		if (string.IsNullOrWhiteSpace(relativePath))
+			return null;
+
+		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+
+		relativePath = relativePath.StartsWith('/') ? relativePath : $"/{relativePath}";
+
+		return $"{baseUrl}{relativePath}";
 	}
 }
