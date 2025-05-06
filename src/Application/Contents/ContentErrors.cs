@@ -27,4 +27,8 @@ public class ContentErrors : EntityErrors<Content, int>
 		$"{EntityName}.{nameof(InvalidPosterPath)}",
 		"Poster path must be a valid URL."
 	);
+	public static Error InvalidAgeRating => Error.BadRequest(
+		$"{EntityName}.{nameof(InvalidAgeRating)}",
+		"Age rating must be between 0 and 100."
+	);
 }

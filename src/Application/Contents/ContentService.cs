@@ -215,6 +215,12 @@ internal class ContentService(
 		if (entity.TrailerUrl != null && !StringUtilities.IsValidWebUrlWithDomainCheck(entity.TrailerUrl))
 			return Result.Bad(ContentErrors.InvalidTrailerUrl);
 
+		if (Guard.Min(entity.AgeRating, 0) || Guard.Max(entity.AgeRating, 100))
+			return Result.Bad(ContentErrors.InvalidAgeRating);
+
+		if (Guard.MinLength(entity.DirectorFullName, 1))
+			return Result.Bad(EntityErrors<Content, int>.StringTooShort(nameof(entity.DirectorFullName), 1));
+
 		return Result.Ok();
 	}
 }

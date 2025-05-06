@@ -23,6 +23,16 @@ public class ContentDto
 	public decimal? Rating { get; set; }
 
 	/// <summary>
+	/// Gets or sets the age rating for the content.
+	/// </summary>
+	public int AgeRating { get; set; }
+
+	/// <summary>
+	/// Gets or sets the full name of the director.
+	/// </summary>
+	public string DirectorFullName { get; set; } = default!;
+
+	/// <summary>
 	/// Gets or sets the release year of the content.
 	/// </summary>
 	public int ReleaseYear { get; set; }

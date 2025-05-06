@@ -23,7 +23,8 @@ internal class ContentSorter(CoreDbContext dbContext)
 
 			foreach (var term in terms)
 				searchPredicate = searchPredicate.Or(c => EF.Functions.Like(c.Title, term) ||
-														  EF.Functions.Like(c.Description, term));
+														  EF.Functions.Like(c.Description, term) ||
+														  EF.Functions.Like(c.DirectorFullName, term));
 
 			query = query.And(searchPredicate);
 		}
@@ -61,6 +62,11 @@ internal class ContentSorter(CoreDbContext dbContext)
 			query = query.And(filter.HasBanner.Value
 				? c => !string.IsNullOrEmpty(c.BannerUrl)
 				: c => string.IsNullOrEmpty(c.BannerUrl));
+
+		if (filter.MinAgeRating.HasValue)
+			query = query.And(c => c.AgeRating >= filter.MinAgeRating.Value);
+		if (filter.MaxAgeRating.HasValue)
+			query = query.And(c => c.AgeRating <= filter.MaxAgeRating.Value);
 
 		if (filter.GenreIds.Count > 0)
 			if (filter.MatchAllGenres)

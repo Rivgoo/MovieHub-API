@@ -31,6 +31,19 @@ public class Content : BaseEntity<int>, IBaseEntity<int>
 	public decimal? Rating { get; set; }
 
 	/// <summary>
+	/// Gets or sets the age rating for the content (e.g., 0, 6, 12, 16, 18).
+	/// </summary>
+	[Required]
+	public int AgeRating { get; set; }
+
+	/// <summary>
+	/// Gets or sets the full name of the director.
+	/// </summary>
+	[Required]
+	[MaxLength(512)]
+	public string DirectorFullName { get; set; } = default!;
+
+	/// <summary>
 	/// Gets or sets the release year of the content.
 	/// </summary>
 	[Required]

@@ -125,4 +125,14 @@ public class ContentFilter : BaseFilter<Content>
 	/// Filter content that has at least one session starting on or before this date/time.
 	/// </summary>
 	public DateTime? MaxSessionStartTime { get; set; }
+
+	/// <summary>
+	/// Filter by minimum age rating (inclusive).
+	/// </summary>
+	public int? MinAgeRating { get; set; }
+
+	/// <summary>
+	/// Filter by maximum age rating (inclusive).
+	/// </summary>
+	public int? MaxAgeRating { get; set; }
 }

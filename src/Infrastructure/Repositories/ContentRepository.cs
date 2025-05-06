@@ -24,10 +24,12 @@ internal class ContentRepository(CoreDbContext dbContext) :
 				TrailerUrl = x.TrailerUrl,
 				BannerUrl = x.BannerUrl,
 				DurationMinutes = x.DurationMinutes,
+				AgeRating = x.AgeRating,
+				DirectorFullName = x.DirectorFullName,
 				CreatedAt = x.CreatedAt,
 				UpdatedAt = x.UpdatedAt,
-				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
-				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
+				GenreIds = x.ContentGenres.Select(g => g.GenreId).ToList(),
+				ActorIds = x.ContentActors.Select(a => a.ActorId).ToList()
 			})
 			.ToListAsync(cancellationToken);
 	}
@@ -46,10 +48,12 @@ internal class ContentRepository(CoreDbContext dbContext) :
 				TrailerUrl = x.TrailerUrl,
 				BannerUrl = x.BannerUrl,
 				DurationMinutes = x.DurationMinutes,
+				AgeRating = x.AgeRating,
+				DirectorFullName = x.DirectorFullName,
 				CreatedAt = x.CreatedAt,
 				UpdatedAt = x.UpdatedAt,
-				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
-				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
+				GenreIds = x.ContentGenres.Select(g => g.GenreId).ToList(),
+				ActorIds = x.ContentActors.Select(a => a.ActorId).ToList()
 			})
 			.FirstOrDefaultAsync(cancellationToken);
 	}

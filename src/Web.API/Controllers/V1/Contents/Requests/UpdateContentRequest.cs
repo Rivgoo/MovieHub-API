@@ -52,4 +52,18 @@ public class UpdateContentRequest
 	[Required]
 	[Range(1, int.MaxValue)]
 	public int DurationMinutes { get; set; }
+
+	/// <summary>
+	/// Gets or sets the updated age rating for the content. This field is required.
+	/// </summary>
+	[Required]
+	[Range(0, 100)]
+	public int AgeRating { get; set; }
+
+	/// <summary>
+	/// Gets or sets the updated full name of the director. This field is required.
+	/// </summary>
+	[Required]
+	[MaxLength(512)]
+	public string DirectorFullName { get; set; } = default!;
 }

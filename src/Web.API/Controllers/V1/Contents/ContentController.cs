@@ -58,6 +58,12 @@ public class ContentController(
 	{
 		for (var i = 0; i < orderField.Length; i++)
 		{
+			if (orderField == null || orderField.Length == 0)
+			{
+				orderField = ["Id"];
+				orderType = [QueryableOrderType.OrderByDescending];
+			}
+
 			var field = orderField[i];
 
 			if (orderType.Count <= i)
@@ -88,14 +94,16 @@ public class ContentController(
 				DurationMinutes = x.DurationMinutes,
 				CreatedAt = x.CreatedAt,
 				UpdatedAt = x.UpdatedAt,
-				GenreIds = x.ContentGenres.Select(g => g.Id).ToList(),
-				ActorIds = x.ContentActors.Select(a => a.Id).ToList()
+				AgeRating = x.AgeRating,
+				DirectorFullName = x.DirectorFullName,
+				GenreIds = x.ContentGenres.Select(g => g.GenreId).ToList(),
+				ActorIds = x.ContentActors.Select(a => a.ActorId).ToList()
 			});
 
 		if (contents.IsFailure)
 			return contents.ToActionResult();
 
-		foreach (var item in contents.Value.Items)
+		foreach (var item in contents.Value!.Items)
 		{
 			item.PosterUrl = CreateFullImageUrl(item.PosterUrl);
 			item.BannerUrl = CreateFullImageUrl(item.BannerUrl);
@@ -129,7 +137,10 @@ public class ContentController(
 		var contentItems = await _entityService.GetAllContentDtosAsync(cancellationToken);
 
 		foreach (var item in contentItems)
+		{
 			item.PosterUrl = CreateFullImageUrl(item.PosterUrl);
+			item.BannerUrl = CreateFullImageUrl(item.BannerUrl);
+		}
 
 		return Ok(contentItems);
 	}
@@ -149,14 +160,15 @@ public class ContentController(
 	{
 		var result = await _entityService.GetContentDtoAsync(id, cancellationToken);
 
-		var content = result.Value;
+		if (result.IsFailure)
+			return result.ToActionResult();
 
-		content!.PosterUrl = CreateFullImageUrl(content.PosterUrl);
+		var content = result.Value!;
 
-		return result.Match(
-			_ => Ok(content),
-			error => result.ToActionResult()
-		);
+		content.PosterUrl = CreateFullImageUrl(content.PosterUrl);
+		content.BannerUrl = CreateFullImageUrl(content.BannerUrl);
+
+		return Ok(content);
 	}
 
 	/// <summary>
@@ -188,7 +200,7 @@ public class ContentController(
 			{
 				var contentGenre = new ContentGenre
 				{
-					ContentId = result.Value.Id,
+					ContentId = result.Value!.Id,
 					GenreId = genreId
 				};
 
@@ -202,7 +214,7 @@ public class ContentController(
 			{
 				var contentActor = new ContentActor
 				{
-					ContentId = result.Value.Id,
+					ContentId = result.Value!.Id,
 					ActorId = actorId
 				};
 
@@ -214,7 +226,7 @@ public class ContentController(
 		}
 
 		return result.Match(
-			_ => Ok(new CreatedResponse<int>(result.Value.Id)),
+			_ => Ok(new CreatedResponse<int>(contentToCreate.Id)),
 			error => result.ToActionResult()
 		);
 	}
@@ -249,7 +261,7 @@ public class ContentController(
 
 		var contentToUpdate = _mapper.Map(request, existingContentResult.Value);
 
-		var result = await _entityService.UpdateAsync(contentToUpdate);
+		var result = await _entityService.UpdateAsync(contentToUpdate!);
 
 		return result.Match(
 			_ => Ok(),
@@ -285,7 +297,7 @@ public class ContentController(
 	/// Uploads or updates the poster image for a specific Content entity.
 	/// </summary>
 	/// <param name="id">The ID of the Content entity for which to upload the poster.</param>
-	/// <param name="base64String">The poster image content encoded as a Base64 string in the request body.</param>
+	/// <param name="request">The poster image content encoded as a Base64 string in the request body.</param>
 	/// <response code="200">Indicates successful upload and update (no body, or updated content entity body if needed).</response>
 	/// <response code="400">Returns an <c>Error</c> object for invalid Base64 string or unsupported image format (<c>FileErrors</c>).</response>
 	/// <response code="404">Returns an <c>Error</c> object if the Content entity with the specified ID is not found.</response>
@@ -300,9 +312,9 @@ public class ContentController(
 	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
-	public async Task<IActionResult> UploadPoster(int id, [FromBody] string base64String)
+	public async Task<IActionResult> UploadPoster(int id, [FromBody] UploadPosterRequest request)
 	{
-		var result = await _entityService.SavePosterAsync(id, base64String);
+		var result = await _entityService.SavePosterAsync(id, request.Base64Image);
 
 		return result.Match(
 			_ => Ok(new UploadPosterResponse(CreateFullImageUrl(result.Value.PosterUrl))),
@@ -319,7 +331,6 @@ public class ContentController(
 	/// Requires authentication with the Admin role.
 	/// </summary>
 	/// <param name="id">The ID of the Content entity for which to delete the poster.</param>
-	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
 	/// <returns>An IActionResult indicating the result of the deletion operation.</returns>
 	/// <response code="200">Indicates successful deletion (no body).</response>
 	/// <response code="404">Returns an <c>Error</c> object if the Content entity is not found (optional, if DeletePosterAsync returns NotFound).</response>
@@ -333,7 +344,7 @@ public class ContentController(
 	[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	[ProducesResponseType(StatusCodes.Status403Forbidden)]
-	public async Task<IActionResult> DeletePoster(int id, CancellationToken cancellationToken)
+	public async Task<IActionResult> DeletePoster(int id)
 	{
 		var result = await _entityService.DeletePosterAsync(id);
 
@@ -457,7 +468,7 @@ public class ContentController(
 		if (contentGenre.IsFailure)
 			return contentGenre.ToActionResult();
 
-		var result = await _contentGenreService.DeleteAsync(contentGenre.Value);
+		var result = await _contentGenreService.DeleteAsync(contentGenre.Value!);
 
 		return result.ToActionResult();
 	}
@@ -466,7 +477,6 @@ public class ContentController(
 	/// Links a specific Actor to a Content entity.
 	/// </summary>
 	/// <param name="id">The ID of the Content entity.</param>
-	/// <param name="actorId">The ID of the Actor to link.</param>
 	/// <returns>An IActionResult indicating the result of the operation.</returns>
 	/// <response code="200">Indicates successful linking (no body).</response> // Або 201 Created
 	/// <response code="400">Returns an Error object if input IDs are invalid or linking fails due to business rules.</response>
@@ -524,7 +534,7 @@ public class ContentController(
 		if (contentActor.IsFailure)
 			return contentActor.ToActionResult();
 
-		var result = await _contentActorService.DeleteAsync(contentActor.Value);
+		var result = await _contentActorService.DeleteAsync(contentActor.Value!);
 
 		return result.ToActionResult();
 	}
