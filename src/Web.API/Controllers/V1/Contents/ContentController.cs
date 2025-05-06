@@ -56,14 +56,14 @@ public class ContentController(
 	public async Task<IActionResult> ByFilter(int pageSize,
 		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] ContentFilter filter)
 	{
+		if (orderField == null || orderField.Length == 0)
+		{
+			orderField = ["Id"];
+			orderType = [QueryableOrderType.OrderByDescending];
+		}
+
 		for (var i = 0; i < orderField.Length; i++)
 		{
-			if (orderField == null || orderField.Length == 0)
-			{
-				orderField = ["Id"];
-				orderType = [QueryableOrderType.OrderByDescending];
-			}
-
 			var field = orderField[i];
 
 			if (orderType.Count <= i)
