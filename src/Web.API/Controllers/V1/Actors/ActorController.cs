@@ -200,8 +200,12 @@ public class ActorController(
 	[ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
 	public async Task<IActionResult> Update(int id, [FromBody] UpdateActorRequest request, CancellationToken cancellationToken)
 	{
-		var actorToUpdate = _mapper.Map<Actor>(request);
-		actorToUpdate.Id = id;
+		var existingActorResult = await _entityService.GetByIdAsync(id, cancellationToken);
+
+		if (existingActorResult.IsFailure)
+			return existingActorResult.ToActionResult();
+
+		var actorToUpdate = _mapper.Map(request, existingActorResult.Value);
 
 		var result = await _entityService.UpdateAsync(actorToUpdate);
 
