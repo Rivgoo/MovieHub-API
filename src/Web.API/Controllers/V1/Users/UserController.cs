@@ -14,6 +14,7 @@ using Application.Users;
 using Domain.Entities;
 using Application.Filters;
 using Application.Users.Dtos;
+using Web.API.Controllers.V1.Users.Requests;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -177,5 +178,71 @@ public class UserController(
 		return result.Match(
 			_ => Ok(new CreatedResponse<string>(result.Value!.Id)),
 			error => result.ToActionResult());
+	}
+
+	/// <summary>
+	/// Updates an existing User entity.
+	/// </summary>
+	/// <summary>
+	/// Updates the user with the matching ID using the provided data.
+	/// Requires authentication.
+	/// </summary>
+	/// <param name="id">The ID of the User entity to update.</param>
+	/// <param name="request">The request model (<c>UpdateUserRequest</c>) with updated data.</param>
+	/// <returns>An IActionResult indicating the result of the update operation.</returns>
+	/// <response code="200">Indicates successful update (no body, or updated entity body if needed).</response>
+	/// <response code="400">Returns an <c>Error</c> object for validation failures (e.g., invalid format) or if the provided ID in the URL doesn't match an ID in the body (if applicable).</response>
+	/// <response code="404">Returns an <c>Error</c> object if the entity with the specified ID is not found.</response>
+	/// <response code="409">Returns an <c>Error</c> object if a conflict occurs during update (e.g., concurrency conflict).</response>
+	/// <response code="401">If the request does not contain a valid authentication token.</response>
+	/// <response code="403">If the authenticated user does not have the required authorization.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpPut("{id}")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status409Conflict)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+	public async Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
+	{
+		var userToUpdate = _mapper.Map<User>(request);
+		userToUpdate.Id = id;
+
+		var result = await _entityService.UpdateAsync(userToUpdate);
+
+		return result.Match(
+			_ => Ok(),
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Deletes a specific User entity by its unique identifier.
+	/// </summary>
+	/// <summary>
+	/// Deletes the user with the matching ID.
+	/// Requires authentication.
+	/// </summary>
+	/// <param name="id">The ID of the User entity to delete.</param>
+	/// <response code="200">Indicates successful deletion (no body).</response>
+	/// <response code="404">Returns an <c>Error</c> object if the entity with the specified ID is not found.</response>
+	/// <response code="401">If the request does not contain a valid authentication token.</response>
+	/// <response code="403">If the authenticated user does not have the required authorization.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpDelete("{id}")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> Delete(string id)
+	{
+		var result = await _entityService.DeleteByIdAsync(id);
+
+		return result.Match(
+			Ok,
+			error => result.ToActionResult()
+		);
 	}
 }

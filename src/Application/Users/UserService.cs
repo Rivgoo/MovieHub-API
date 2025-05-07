@@ -32,6 +32,19 @@ internal class UserService(
 		return await base.CreateAsync(newEntity);
 	}
 
+	public override async Task<Result<User>> UpdateAsync(User changedEntity)
+	{
+		var alreadyExistsResult = await ExistsByEmailAsync(changedEntity.Email);
+
+		if (alreadyExistsResult.IsFailure)
+			return alreadyExistsResult.ToValue<User>();
+
+		if (alreadyExistsResult.Value && changedEntity.Id != (await GetByEmailAsync(changedEntity.Email)).Value.Id)
+			return Result<User>.Bad(UserErrors.UserWithAlreadyExists(changedEntity.Email));
+
+		return await base.UpdateAsync(changedEntity);
+	}
+
 	public async Task<Result<bool>> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
 		if (Guard.MaxLength(email, 255) || StringUtilities.ValidateEmail(email) == false)
