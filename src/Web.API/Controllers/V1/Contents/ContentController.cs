@@ -14,6 +14,7 @@ using Application.Contents.Dtos;
 using Application.Filters.Abstractions;
 using Application.Filters;
 using Application.Contents;
+using System.Security.Claims;
 
 namespace Web.API.Controllers.V1.Contents;
 
@@ -44,6 +45,7 @@ public class ContentController(
 	/// <param name="pageSize">The number of items to return per page (must be positive).</param>
 	/// <param name="orderField">The field name(s) to order by (e.g., "Id", "Title", "ReleaseYear"). Case-sensitive based on implementation.</param>
 	/// <param name="orderType">The order type(s) corresponding to each orderField.</param>
+	/// <param name="isFavorited">Gets or sets a flag indicating whether to retrieve content favorited by the current user (true)</param>
 	/// <param name="filter">The filter criteria object containing search terms, ranges, etc.</param>
 	/// <response code="200">Returns the paginated list of content items.</response>
 	/// <response code="400">Returns an error if the input (page size, ordering, filter) is invalid.</response>
@@ -53,9 +55,21 @@ public class ContentController(
 	[ProducesResponseType(typeof(PaginatedList<ContentDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-	public async Task<IActionResult> ByFilter(int pageSize,
+	public async Task<IActionResult> ByFilter(bool? isFavorited, int pageSize,
 		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] ContentFilter filter)
 	{
+		if (!User.IsInRole(RoleList.Admin))
+		{
+			if (isFavorited != null && isFavorited.Value)
+			{
+				var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+				filter.FavoritedByUserId = currentUserId;
+			}
+			else
+				filter.FavoritedByUserId = null;
+		}
+
 		if (orderField == null || orderField.Length == 0)
 		{
 			orderField = ["Id"];

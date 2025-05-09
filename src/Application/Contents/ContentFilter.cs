@@ -96,17 +96,8 @@ public class ContentFilter : BaseFilter<Content>
 	/// <summary>
 	/// Gets or sets the User ID for whom to check favorite status.
 	/// If set, filters content based on whether it's favorited by this user.
-	/// Combine with <see cref="IsFavorited"/> flag.
 	/// </summary>
 	public string? FavoritedByUserId { get; set; }
-
-	/// <summary>
-	/// Gets or sets a flag indicating whether to retrieve content favorited by the specified user (true)
-	/// or content *not* favorited by the specified user (false).
-	/// Only effective if <see cref="FavoritedByUserId"/> is set.
-	/// If <see cref="FavoritedByUserId"/> is set and this is null, the filter might be ignored or default to true depending on implementation.
-	/// </summary>
-	public bool? IsFavorited { get; set; }
 
 	/// <summary>
 	/// Gets or sets a flag to filter content based on whether it has any associated Sessions.

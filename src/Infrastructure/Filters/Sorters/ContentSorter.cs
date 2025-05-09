@@ -80,14 +80,11 @@ internal class ContentSorter(CoreDbContext dbContext)
 			else
 				query = query.And(c => c.ContentActors.Any(ca => filter.ActorIds.Contains(ca.ActorId)));
 
-		if (!string.IsNullOrEmpty(filter.FavoritedByUserId) && filter.IsFavorited.HasValue)
+		if (!string.IsNullOrEmpty(filter.FavoritedByUserId))
 		{
 			var userId = filter.FavoritedByUserId;
 
-			if (filter.IsFavorited.Value)
-				query = query.And(c => c.FavoriteContents.Any(fc => fc.UserId == userId));
-			else
-				query = query.And(c => !c.FavoriteContents.Any(fc => fc.UserId == userId));
+			query = query.And(c => c.FavoriteContents.Any(fc => fc.UserId == userId));
 		}
 
 		if (filter.HasSessions.HasValue)
