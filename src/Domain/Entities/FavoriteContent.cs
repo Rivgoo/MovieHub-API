@@ -21,12 +21,6 @@ public class FavoriteContent : BaseEntity<int>, IBaseEntity<int>
 	public int ContentId { get; set; } = default!;
 
 	/// <summary>
-	/// Gets or sets the date and time when the content was added to favorites.
-	/// </summary>
-	[Required]
-	public DateTime TimeAdded { get; set; }
-
-	/// <summary>
 	/// Gets or sets the user associated with this favorite content.
 	/// </summary>
 	public User User { get; set; } = default!;

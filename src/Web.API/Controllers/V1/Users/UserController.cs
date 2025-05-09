@@ -15,6 +15,8 @@ using Domain.Entities;
 using Application.Filters;
 using Application.Users.Dtos;
 using Web.API.Controllers.V1.Users.Requests;
+using Application.Contents.Abstractions.Services;
+using Web.API.Controllers.V1.Authentications;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -30,11 +32,13 @@ public class UserController(
 	IMapper mapper,
 	IUserService entityService,
 	IUserRegistrator userRegistrator,
-	IFilterService<User, UserFilter> filterService) :
+	IFilterService<User, UserFilter> filterService,
+	IFavoriteContentService favoriteContentService) :
 	EntityApiController<IUserService>(mapper, entityService)
 {
 	private readonly IUserRegistrator _userRegistrator = userRegistrator;
 	private readonly IFilterService<User, UserFilter> _filterService = filterService;
+	private readonly IFavoriteContentService _favoriteContentService = favoriteContentService;
 
 	/// <summary>
 	/// Retrieves user items based on filter, pagination, and ordering criteria. (Admin only)
@@ -245,4 +249,87 @@ public class UserController(
 			error => result.ToActionResult()
 		);
 	}
+
+	#region Favorite Content
+	/// <summary>
+	/// Adds a specified content to the current user's favorites.
+	/// </summary>
+	/// <param name="contentId">The ID of the content to add to favorites.</param>
+	/// <response code="200">Content successfully added to favorites.</response>
+	/// <response code="400">If the content is already in favorites, or other validation error occurs (e.g. content or user not found).</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	/// <response code="404">If the user or content related to the operation does not exist.</response>
+	/// <response code="409">If the content is already in favorites.</response>
+	[Authorize]
+	[HttpPost("favorites/{contentId:int}")]
+	[ProducesResponseType(typeof(CreatedResponse<int>), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status409Conflict)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> AddToFavorites(int contentId)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrEmpty(userId))
+			return Unauthorized(AuthenticationErrors.InvalidCredentials);
+
+		var result = await favoriteContentService.CreateAsync(userId, contentId);
+
+		return result.Match(
+			_ => Ok(new CreatedResponse<int>(result.Value!.Id)),
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Removes a specified content from the current user's favorites.
+	/// </summary>
+	/// <param name="contentId">The ID of the content to remove from favorites.</param>
+	/// <response code="200">Content successfully removed from favorites (or was not favorited).</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	/// <response code="404">If the user or content related to the operation does not exist (less likely if remove is idempotent on favorite entry).</response>
+	[Authorize]
+	[HttpDelete("favorites/{contentId:int}")]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> RemoveFromFavorites(int contentId)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrEmpty(userId))
+			return Unauthorized(AuthenticationErrors.InvalidCredentials);
+
+		var result = await favoriteContentService.DeleteAsync(userId, contentId);
+		return result.ToActionResult();
+	}
+
+	/// <summary>
+	/// Checks if a specified content is in the current user's favorites.
+	/// </summary>
+	/// <param name="contentId">The ID of the content to check.</param>
+	/// <param name="cancellationToken">A CancellationToken.</param>
+	/// <response code="200">Returns a boolean indicating if the content is in favorites.</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	/// <response code="404">If the user or content does not exist.</response>
+	[Authorize]
+	[HttpGet("favorites/{contentId:int}/exists")]
+	[ProducesResponseType(typeof(ExistsResponse), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> IsContentInFavorites(int contentId, CancellationToken cancellationToken)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrEmpty(userId))
+			return Unauthorized(AuthenticationErrors.InvalidCredentials);
+
+		var result = await _favoriteContentService.IsFavoriteAsync(userId, contentId, cancellationToken);
+
+		return result.Match(
+			isFavorite => Ok(new ExistsResponse(isFavorite)),
+			error => result.ToActionResult()
+		);
+	}
+	#endregion
 }
