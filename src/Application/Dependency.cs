@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Services;
+using Application.Bookings;
 using Application.Filters.Abstractions;
 using Application.Filters.Services;
 using Application.Seeds;
@@ -36,6 +37,8 @@ public static class Dependency
 
 		services.AddScoped<IUserRegistrator, UserRegistrator>();
 		#endregion
+
+		services.AddHostedService<BookingConfirmationService>();
 
 		services.AddScoped(typeof(IFilterService<,>), typeof(FilterService<,>));
 
