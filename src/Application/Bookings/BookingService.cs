@@ -22,6 +22,41 @@ internal class BookingService(
 	private readonly ISessionService _sessionService = sessionService;
 	private readonly ICinemaHallService _cinemaHallService = cinemaHallService;
 
+	public async Task<Result> CancelBookingAsync(int bookingId, string userId)
+	{
+		var bookingToCancelResult = await GetByIdAsync(bookingId);
+
+		if(bookingToCancelResult.IsFailure)
+			return bookingToCancelResult.ToValue<Booking>();
+
+		var bookingToCancel = bookingToCancelResult.Value;
+
+		if (bookingToCancel.Status == BookingStatus.Canceled)
+			return Result.Ok();
+
+		if (bookingToCancel.UserId != userId)
+			return Result.Bad(BookingErrors.AccessDenied);
+
+		var sessionResult = await _sessionService.GetByIdAsync(bookingToCancel.SessionId);
+
+		if (sessionResult.IsFailure)
+			return Result.Bad(sessionResult.Error);
+
+		var session = sessionResult.Value!;
+
+		if (session.Status == SessionStatus.Ended)
+			return Result.Bad(BookingErrors.CannotCancelCompletedSession);
+		if (session.Status == SessionStatus.Ongoing)
+			return Result.Bad(BookingErrors.CannotCancelStartedSession);
+
+		bookingToCancel.Status = BookingStatus.Canceled;
+
+		_entityRepository.Update(bookingToCancel);
+		await _unitOfWork.SaveChangesAsync();
+
+		return Result.Ok();
+	}
+
 	public async Task<bool> IsSeatBooked(int sessionId, int rowNumber, int seatNumber)
 		=> await _entityRepository.IsSeatBooked(sessionId, rowNumber, seatNumber);
 

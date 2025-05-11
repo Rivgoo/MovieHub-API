@@ -59,4 +59,12 @@ public class BookingErrors : EntityErrors<Booking, int>
 		Error.AccessForbidden(
 			$"{EntityName}.{nameof(AccessDenied)}",
 			"User does not have permission to access this booking.");
+
+	public static Error CannotCancelCompletedSession => Error.BadRequest(
+		$"{EntityName}.{nameof(CannotCancelCompletedSession)}",
+		"Cannot cancel a booking for a session that has already completed.");
+
+	public static Error CannotCancelStartedSession => Error.BadRequest(
+		$"{EntityName}.{nameof(CannotCancelStartedSession)}",
+		"Cannot cancel a booking for a session that has already started or is ongoing.");
 }

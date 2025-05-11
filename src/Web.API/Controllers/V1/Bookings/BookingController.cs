@@ -148,6 +148,35 @@ public class BookingController(
 	}
 
 	/// <summary>
+	/// Cancels a specific booking by its ID.
+	/// </summary>
+	/// <remarks>
+	/// Allows an authenticated user to cancel their own booking.
+	/// The booking can only be canceled if the associated session has not ended or started.
+	/// If the booking is already canceled, the operation is considered successful (idempotent).
+	/// </remarks>
+	/// <param name="id">The ID of the booking to cancel.</param>
+	/// <response code="200">Indicates the booking was successfully canceled or was already canceled.</response>
+	/// <response code="400">If the booking cannot be canceled due to business rules (e.g., session has ended/started, or other validation errors like session not found).</response>
+	/// <response code="403">If the authenticated user is not authorized to cancel this booking (not the owner and not an Admin).</response>
+	/// <response code="404">If the booking with the specified ID is not found.</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	[HttpPut("{id:int}/cancel")]
+	[Authorize(Roles = RoleList.Customer)]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	public async Task<IActionResult> CancelBooking(int id)
+	{
+		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		var cancelResult = await _entityService.CancelBookingAsync(id, currentUserId);
+
+		return cancelResult.ToActionResult();
+	}
+
+	/// <summary>
 	/// Creates a new Booking entity.
 	/// </summary>
 	/// <param name="request">The request model for the new booking.</param>
