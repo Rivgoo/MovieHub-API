@@ -5,6 +5,8 @@ using Application.Contents.Abstractions.Services;
 using Application.Actors.Abstractions;
 using Application.Results;
 using Domain.Entities;
+using Application.Actors.Dtos;
+using Application.Actors;
 
 namespace Application.Contents;
 
@@ -17,6 +19,33 @@ internal class ContentActorService(
 {
 	private readonly IContentService _contentService = contentService;
 	private readonly IActorService _actorService = actorService;
+
+	public async Task<Result<ActorInContentDto>> GetActorInContentAsync(int actorId, int contentId, CancellationToken cancellationToken = default)
+	{
+		var actorResult = await _actorService.GetByIdAsync(actorId, cancellationToken);
+
+		if (actorResult.IsFailure)
+			return Result<ActorInContentDto>.Bad(actorResult.Error!);
+
+		var actor = actorResult.Value!;
+
+		var contentActor = await _entityRepository.GetByDataAsync(contentId, actorId, cancellationToken);
+
+		if (contentActor == null)
+			return Result<ActorInContentDto>.Bad(ActorErrors.RoleNotFoundInContent(actorId, contentId));
+
+		var actorInContentDto = new ActorInContentDto
+		{
+			Id = actor.Id,
+			FirstName = actor.FirstName,
+			LastName = actor.LastName,
+			PhotoUrl = actor.PhotoUrl,
+			RoleName = contentActor.RoleName
+		};
+
+		return Result<ActorInContentDto>.Ok(actorInContentDto);
+	}
+
 
 	public async Task<Result<bool>> ExistsByDataAsync(int id, int actorId, CancellationToken cancellationToken = default)
 	{

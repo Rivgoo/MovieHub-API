@@ -14,6 +14,7 @@ using Application.Actors;
 using Application.Filters.Abstractions;
 using Application.Actors.Dtos;
 using Application.Filters;
+using Application.Contents.Abstractions.Services;
 
 namespace Web.API.Controllers.V1.Actors;
 
@@ -30,10 +31,12 @@ namespace Web.API.Controllers.V1.Actors;
 public class ActorController(
 	IMapper mapper, 
 	IActorService entityService,
+	IContentActorService contentActorService,
 	IFilterService<Actor, ActorFilter> filterService) :
 	EntityApiController<IActorService>(mapper, entityService)
 {
 	private readonly IFilterService<Actor, ActorFilter> _filterService = filterService;
+	private readonly IContentActorService _contentActorService = contentActorService;
 
 	/// <summary>
 	/// Retrieves actor items based on filter, pagination, and ordering criteria.
@@ -133,6 +136,32 @@ public class ActorController(
 				var response = _mapper.Map<ActorDto>(actor);
 				response.PhotoUrl = CreateFullPhotoUrl(response.PhotoUrl);
 				return Ok(response);
+			},
+			error => result.ToActionResult()
+		);
+	}
+
+	/// <summary>
+	/// Retrieves information about a specific actor within the context of a specific content, including their role.
+	/// </summary>
+	/// <param name="id">The ID of the Actor.</param>
+	/// <param name="contentId">The ID of the Content.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <response code="200">Returns the actor's details and role in the specified content.</response>
+	/// <response code="404">If the actor, content, or the actor's role in the content is not found.</response>
+	[AllowAnonymous]
+	[HttpGet("{id:int}/in-content/{contentId:int}")]
+	[ProducesResponseType(typeof(ActorInContentDto), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	public async Task<IActionResult> GetActorInContent(int id, int contentId, CancellationToken cancellationToken)
+	{
+		var result = await _contentActorService.GetActorInContentAsync(id, contentId, cancellationToken);
+
+		return result.Match(
+			actorInContentDto =>
+			{
+				actorInContentDto.PhotoUrl = CreateFullPhotoUrl(actorInContentDto.PhotoUrl);
+				return Ok(actorInContentDto);
 			},
 			error => result.ToActionResult()
 		);
