@@ -2,7 +2,7 @@
 using Application.Abstractions.Services;
 using Application.Contents.Abstractions.Repositories;
 using Application.Contents.Abstractions.Services;
-using Application.Genres.Abstractions;
+using Application.Actors.Abstractions;
 using Application.Results;
 using Domain.Entities;
 
@@ -10,13 +10,13 @@ namespace Application.Contents;
 
 internal class ContentActorService(
 	IContentService contentService,
-	IGenreService genreService,
+	IActorService actorService,
 	IContentActorRepository entityRepository,
 	IUnitOfWork unitOfWork) :
 	BaseEntityService<ContentActor, int, IContentActorRepository>(entityRepository, unitOfWork), IContentActorService
 {
 	private readonly IContentService _contentService = contentService;
-	private readonly IGenreService _genreService = genreService;
+	private readonly IActorService _actorService = actorService;
 
 	public async Task<Result<bool>> ExistsByDataAsync(int id, int actorId, CancellationToken cancellationToken = default)
 	{
@@ -58,10 +58,10 @@ internal class ContentActorService(
 		if (contentExistsResult.IsFailure)
 			return contentExistsResult;
 
-		var genreExistsResult = await _genreService.VerifyExistsByIdAsync(entity.ActorId);
+		var actorExistsResult = await _actorService.VerifyExistsByIdAsync(entity.ActorId);
 
-		if (genreExistsResult.IsFailure)
-			return genreExistsResult;
+		if (actorExistsResult.IsFailure)
+			return actorExistsResult;
 
 		return Result.Ok();
 	}
