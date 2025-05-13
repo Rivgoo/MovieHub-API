@@ -121,6 +121,26 @@ public class UserController(
 		=> (await _entityService.GetUserInfoByIdAsync(id)).ToActionResult();
 
 	/// <summary>
+	/// Retrieves a specific User entity by its unique identifier. (Admin only)
+	/// </summary>
+	/// <param name="id">The ID of the User entity to retrieve.</param>
+	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+	/// <response code="200">Returns the <c>UserDto</c> for the specified user.</response>
+	/// <response code="404">If the user with the specified ID is not found.</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	/// <response code="403">If the authenticated user does not have the 'Admin' role.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpGet("{id}")]
+	[ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
+	{
+		return (await _entityService.GetDtoByIdAsync(id, cancellationToken)).ToActionResult();
+	}
+
+	/// <summary>
 	/// Retrieves the basic information of the currently authenticated user.
 	/// </summary>
 	/// <response code="200">Returns the user's basic information.</response>

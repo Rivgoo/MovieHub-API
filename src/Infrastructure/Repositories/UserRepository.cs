@@ -1,4 +1,5 @@
 ﻿using Application.Users.Abstractions;
+using Application.Users.Dtos;
 using Application.Users.Models;
 using Domain.Entities;
 using Infrastructure.Abstractions;
@@ -20,6 +21,28 @@ internal class UserRepository(CoreDbContext dbContext) :
 	{
 		return await _entities.AsNoTracking()
 			.Where(x => x.Email!.Equals(email))
+			.FirstOrDefaultAsync(cancellationToken);
+	}
+
+	public async Task<UserDto?> GetDtoByIdAsync(string id, CancellationToken cancellationToken)
+	{
+		return await _entities.AsNoTracking()
+			.Where(u => u.Id == id)
+			.Select(u => new UserDto
+			{
+				Id = u.Id,
+				FirstName = u.FirstName,
+				LastName = u.LastName,
+				Email = u.Email ?? string.Empty,
+				UserName = u.UserName ?? string.Empty,
+				PhoneNumber = u.PhoneNumber,
+				EmailConfirmed = u.EmailConfirmed,
+				IsBlocked = u.IsBlocked,
+				CreatedAt = u.CreatedAt,
+				UpdatedAt = u.UpdatedAt,
+				LastLoginAt = u.LastLoginAt,
+				Roles = _dbContext.UserRoles.Where(ur => ur.UserId == u.Id).Select(r => r.RoleId).ToList()
+			})
 			.FirstOrDefaultAsync(cancellationToken);
 	}
 

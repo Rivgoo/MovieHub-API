@@ -2,6 +2,7 @@
 using Application.Abstractions.Services;
 using Application.Results;
 using Application.Users.Abstractions;
+using Application.Users.Dtos;
 using Application.Users.Models;
 using Application.Utilities;
 using Domain.Entities;
@@ -61,7 +62,15 @@ internal class UserService(
 
 		return Result<User>.Ok(user);
 	}
+	public async Task<Result<UserDto?>> GetDtoByIdAsync(string id, CancellationToken cancellationToken = default)
+	{
+		var result = await _entityRepository.GetDtoByIdAsync(id, cancellationToken);
 
+		if (result == null)
+			return Result<UserDto?>.Bad(EntityErrors<User, string>.NotFoundById(id));
+
+		return Result<UserDto?>.Ok(result);
+	}
 	public async Task<Result<UserInfo>> GetUserInfoByIdAsync(string id, CancellationToken cancellationToken = default)
 	{
 		var userInfo = await entityRepository.GetUserInfoByIdAsync(id, cancellationToken);
