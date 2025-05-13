@@ -254,10 +254,14 @@ public class UserController(
 	[ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
 	public async Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
 	{
-		var userToUpdate = _mapper.Map<User>(request);
-		userToUpdate.Id = id;
+		var existingUser = await _entityService.GetByIdAsync(id);
 
-		var result = await _entityService.UpdateAsync(userToUpdate);
+		if (existingUser.IsFailure)
+			return existingUser.ToActionResult();
+
+		var userToUpdate = _mapper.Map(request, existingUser.Value);
+
+		var result = await _entityService.UpdateAsync(userToUpdate!);
 
 		return result.Match(
 			_ => Ok(),

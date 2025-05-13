@@ -42,6 +42,12 @@ internal class UserService(
 
 		if (alreadyExistsResult.Value && changedEntity.Id != (await GetByEmailAsync(changedEntity.Email)).Value.Id)
 			return Result<User>.Bad(UserErrors.UserWithAlreadyExists(changedEntity.Email));
+		else
+		{
+			changedEntity.NormalizedEmail = changedEntity.Email.ToUpperInvariant();
+			changedEntity.NormalizedUserName = changedEntity.Email.ToUpperInvariant();
+			changedEntity.UserName = changedEntity.Email;
+		}
 
 		return await base.UpdateAsync(changedEntity);
 	}
