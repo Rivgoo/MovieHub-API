@@ -17,6 +17,8 @@ using Application.Users.Dtos;
 using Web.API.Controllers.V1.Users.Requests;
 using Application.Contents.Abstractions.Services;
 using Web.API.Controllers.V1.Authentications;
+using Application.Roles.Dtos;
+using Microsoft.AspNetCore.Identity;
 
 namespace Web.API.Controllers.V1.Users;
 
@@ -33,12 +35,14 @@ public class UserController(
 	IUserService entityService,
 	IUserRegistrator userRegistrator,
 	IFilterService<User, UserFilter> filterService,
-	IFavoriteContentService favoriteContentService) :
+	IFavoriteContentService favoriteContentService,
+	RoleManager<Role> roleManager) :
 	EntityApiController<IUserService>(mapper, entityService)
 {
 	private readonly IUserRegistrator _userRegistrator = userRegistrator;
 	private readonly IFilterService<User, UserFilter> _filterService = filterService;
 	private readonly IFavoriteContentService _favoriteContentService = favoriteContentService;
+	private readonly RoleManager<Role> _roleManager = roleManager;
 
 	/// <summary>
 	/// Retrieves user items based on filter, pagination, and ordering criteria. (Admin only)
@@ -134,6 +138,25 @@ public class UserController(
 			return Unauthorized(Error.AccessForbidden("User.NotFound", "User not found"));
 
 		return (await _entityService.GetUserInfoByIdAsync(id)).ToActionResult();
+	}
+
+	/// <summary>
+	/// Retrieves a list of all available roles in the system. (Admin only)
+	/// </summary>
+	/// <response code="200">Returns a list of all roles with their IDs and names.</response>
+	/// <response code="401">If the user is not authenticated.</response>
+	/// <response code="403">If the authenticated user does not have the 'Admin' role.</response>
+	[Authorize(Roles = RoleList.Admin)]
+	[HttpGet("roles")]
+	[ProducesResponseType(typeof(IEnumerable<RoleDto>), StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> GetAllRoles()
+	{
+		var roles = _roleManager.Roles.ToList();
+		var roleDtos = _mapper.Map<IEnumerable<RoleDto>>(roles);
+
+		return Ok(roleDtos);
 	}
 
 	/// <summary>
