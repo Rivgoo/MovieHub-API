@@ -162,7 +162,7 @@ public class BookingController(
 	/// <response code="404">If the booking with the specified ID is not found.</response>
 	/// <response code="401">If the user is not authenticated.</response>
 	[HttpPut("{id:int}/cancel")]
-	[Authorize(Roles = RoleList.Customer)]
+	[Authorize]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(Error), StatusCodes.Status403Forbidden)]
@@ -170,10 +170,15 @@ public class BookingController(
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 	public async Task<IActionResult> CancelBooking(int id)
 	{
-		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-		var cancelResult = await _entityService.CancelBookingAsync(id, currentUserId);
+		if (User.IsInRole(RoleList.Customer))
+		{
+			var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			var cancelResult = await _entityService.CancelBookingByCustomerAsync(id, currentUserId!);
 
-		return cancelResult.ToActionResult();
+			return cancelResult.ToActionResult();
+		}
+
+		return (await _entityService.CancelBookingAsync(id)).ToActionResult();
 	}
 
 	/// <summary>
