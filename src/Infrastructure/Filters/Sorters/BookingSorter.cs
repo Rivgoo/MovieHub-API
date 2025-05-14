@@ -20,7 +20,7 @@ internal class BookingSorter(CoreDbContext dbContext)
 		if (filter.SessionId.HasValue)
 			query = query.And(b => b.SessionId == filter.SessionId.Value);
 
-		if (filter.Statuses.Count > 0)
+		if (filter.Statuses != null && filter.Statuses.Count > 0)
 			query = query.And(b => filter.Statuses.Contains(b.Status));
 
 		if (filter.MinCreatedAt.HasValue)
