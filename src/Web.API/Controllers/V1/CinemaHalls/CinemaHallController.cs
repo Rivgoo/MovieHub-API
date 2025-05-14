@@ -106,7 +106,7 @@ public class CinemaHallController(
 	/// <response code="200">Returns a list of <c>CinemaHall</c> entities.</response>
 	/// <response code="401">If the request does not contain a valid authentication token.</response>
 	/// <response code="403">If the authenticated user does not have the required authorization.</response>
-	[Authorize(Roles = RoleList.Admin)]
+	[AllowAnonymous]
 	[HttpGet]
 	[ProducesResponseType(typeof(IEnumerable<CinemaHallDto>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status401Unauthorized)]
