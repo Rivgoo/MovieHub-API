@@ -18,7 +18,7 @@ public class BookingFilter : BaseFilter<Booking>
 	/// <summary>
 	/// Filter by booking status.
 	/// </summary>
-	public BookingStatus? Status { get; set; }
+	public List<BookingStatus> Statuses { get; set; } = default!;
 
 	/// <summary>
 	/// Filter by minimum creation date (inclusive).
