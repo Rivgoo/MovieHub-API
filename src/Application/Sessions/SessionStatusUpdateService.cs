@@ -58,10 +58,12 @@ internal class SessionStatusUpdateService : BackgroundService
 						DateTime sessionEndTime = session.StartTime.AddMinutes(session.Content.DurationMinutes);
 
 						if (session.Status == SessionStatus.Scheduled)
+						{ 	
 							if (utcNow >= session.StartTime && utcNow < sessionEndTime)
 								session.Status = SessionStatus.Ongoing;
 							else if (utcNow >= sessionEndTime)
 								session.Status = SessionStatus.Ended;
+						}
 						else if (session.Status == SessionStatus.Ongoing)
 							if (utcNow >= sessionEndTime)
 								session.Status = SessionStatus.Ended;
