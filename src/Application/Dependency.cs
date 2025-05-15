@@ -4,6 +4,7 @@ using Application.Filters.Abstractions;
 using Application.Filters.Services;
 using Application.Seeds;
 using Application.Seeds.Abstractions;
+using Application.Sessions;
 using Application.Sessions.Abstractions;
 using Application.Users;
 using Application.Users.Abstractions;
@@ -39,6 +40,7 @@ public static class Dependency
 		#endregion
 
 		services.AddHostedService<BookingConfirmationService>();
+		services.AddHostedService<SessionStatusUpdateService>();
 
 		services.AddScoped(typeof(IFilterService<,>), typeof(FilterService<,>));
 
