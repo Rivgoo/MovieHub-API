@@ -10,16 +10,14 @@ namespace Domain.Entities;
 public class CinemaHall : BaseEntity<int>, IBaseEntity<int>
 {
 	/// <summary>
-	/// Gets the total capacity of the cinema hall, calculated from the seating layout.
-	/// </summary>
-	/// <value>The total number of seats in the hall.</value>
-	public int TotalCapacity => SeatsPerRow?.Sum() ?? 0;
+    /// Gets the total capacity of the cinema hall.
+    /// </summary>
+    public int TotalCapacity { get; set; }
 
 	/// <summary>
 	/// Gets the total number of rows in the cinema hall.
 	/// </summary>
-	/// <value>The number of elements in the SeatsPerRow list.</value>
-	public int NumberOfRows => SeatsPerRow?.Count ?? 0;
+	public int NumberOfRows { get; set; }
 
 	/// <summary>
 	/// Gets or sets the name of the cinema hall.

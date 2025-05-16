@@ -23,12 +23,12 @@ public class CinemaHallDto
 	/// <summary>
 	/// Gets the total number of rows in the cinema hall.
 	/// </summary>
-	public int NumberOfRows => SeatsPerRow?.Count ?? 0;
+	public int NumberOfRows { get; set; } 
 
 	/// <summary>
 	/// Gets the total capacity of the cinema hall.
 	/// </summary>
-	public int TotalCapacity => SeatsPerRow?.Sum() ?? 0;
+	public int TotalCapacity { get; set; }
 
 	/// <summary>
 	/// Gets or sets the creation timestamp.

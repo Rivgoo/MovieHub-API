@@ -33,6 +33,9 @@ internal class CinemaHallService(
 			else if (seats > 1000)
 				return Result.Bad(CinemaHallErrors.SeatsRowTooMuch);
 
+		entity.TotalCapacity = entity.SeatsPerRow.Sum();
+		entity.NumberOfRows = entity.SeatsPerRow.Count;
+
 		return Result.Ok();
 	}
 }
