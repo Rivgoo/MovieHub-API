@@ -14,6 +14,7 @@ using Application.Filters;
 using Application.Sessions;
 using Application.Sessions.Models;
 using Application.Sessions.Dtos;
+using Domain.Enums;
 
 namespace Web.API.Controllers.V1.Sessions;
 
@@ -50,6 +51,8 @@ public class SessionController(
 	public async Task<IActionResult> ByFilter(int pageSize,
 		[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] SessionFilter filter)
 	{
+		filter.Status ??= SessionStatus.Scheduled;
+
 		if (orderField == null || orderField.Length == 0)
 		{
 			orderField = ["StartTime"];
@@ -98,6 +101,8 @@ public class SessionController(
 	public async Task<IActionResult> ByFilterWithContent(int pageSize,
 	[FromQuery] string[] orderField, [FromQuery] List<QueryableOrderType> orderType, [FromQuery] SessionContentFilter filter)
 	{
+		filter.Status ??= SessionStatus.Scheduled;
+
 		if (orderField == null || orderField.Length == 0)
 		{
 			orderField = ["StartTime"];
